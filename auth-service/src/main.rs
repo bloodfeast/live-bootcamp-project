@@ -2,7 +2,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use auth_service::app_state::AppState;
-use auth_service::services::hashmap_user_store::HashmapUserStore;
+use auth_service::services::HashmapUserStore;
 use auth_service::Application;
 
 #[tokio::main]

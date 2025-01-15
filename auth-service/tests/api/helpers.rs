@@ -3,7 +3,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 use auth_service::app_state::AppState;
 use auth_service::Application;
-use auth_service::services::hashmap_user_store::HashmapUserStore;
+use auth_service::services::HashmapUserStore;
 
 pub struct TestApp {
     pub address: String,
@@ -30,7 +30,7 @@ impl TestApp {
         let address = format!("http://{}", app.address().to_string());
 
         #[allow(clippy::let_underscore_future)]
-        let _ = tokio::spawn(app.run());
+        let _ = tokio::spawn(async { app.run().await });
         let http_client = reqwest::Client::builder().build().expect("Failed to build HTTP client");
 
 

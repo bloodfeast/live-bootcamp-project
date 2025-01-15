@@ -15,6 +15,7 @@ pub mod app_state;
 pub mod http_response;
 
 use app_state::AppState;
+use crate::domain::UserStore;
 
 // This struct encapsulates our application-related logic.
 #[derive(Debug)]
@@ -25,8 +26,12 @@ pub struct Application {
     address: String,
 }
 
-impl Application {
-    pub async fn build(app_state: AppState,address: &str) -> Result<Self, Box<dyn Error>> {
+impl Application
+{
+    pub async fn build<T>(app_state: AppState<T>, address: &str) -> Result<Self, Box<dyn Error>>
+    where
+        T: UserStore + Clone + Send + Sync + 'static,
+    {
         let serve_dir =
             ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html"));
 

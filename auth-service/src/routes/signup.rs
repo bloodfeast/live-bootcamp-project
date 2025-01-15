@@ -4,7 +4,7 @@ use axum::{
     extract::State,
 };
 use serde::{Deserialize};
-
+use tokio::io::AsyncWriteExt;
 use crate::{
     app_state::AppState,
     domain::{
@@ -15,6 +15,7 @@ use crate::{
         AuthMessage
     },
 };
+use crate::domain::UserStore;
 
 fn is_valid_email(email: &str) -> bool {
     match email {
@@ -40,10 +41,12 @@ pub struct SignupRequest {
     pub requires_2fa: bool,
 }
 
-pub async fn signup(
-    State(state): State<AppState>,
+pub async fn signup<T>(
+    State(state): State<AppState<T>>,
     Json(request): Json<SignupRequest>,
-) -> Result<impl IntoResponse, AuthAPIError> {
+) -> Result<impl IntoResponse, AuthAPIError>
+where T: UserStore + Clone + Send + Sync + 'static
+{
     let email = request.email;
     let password = request.password;
 
@@ -56,11 +59,11 @@ pub async fn signup(
 
     let mut user_store = state.user_store.write().await;
 
-    if user_store.get_user(&user.email).is_ok() {
+    if user_store.get_user(&user.email).await.is_ok() {
         return Err(AuthAPIError::UserAlreadyExists);
     }
 
-    match user_store.add_user(user) {
+    match user_store.add_user(user).await {
         Ok(_) => {
             Ok(AuthMessage::UserCreated.into_response())
         },
