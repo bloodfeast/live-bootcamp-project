@@ -19,7 +19,7 @@ impl TestApp {
         let user_store = HashmapUserStore::default();
         let app_state = AppState::new(Arc::new(RwLock::new(user_store)));
 
-        let app = Application::build(app_state, "0.0.0.0:0")
+        let app = Application::build(app_state, "127.0.0.1:0")
             .await
             .expect("Failed to build app");
 
@@ -27,7 +27,7 @@ impl TestApp {
 
         #[allow(clippy::let_underscore_future)]
         let _ = tokio::spawn(app.run());
-        let http_client = reqwest::Client::new();
+        let http_client = reqwest::Client::builder().build().expect("Failed to build HTTP client");
 
 
         Self {

@@ -7,11 +7,13 @@ use serde::{Deserialize};
 
 use crate::{
     app_state::AppState,
-    AuthMessage,
     domain::{
         User,
         AuthAPIError
-    }
+    },
+    http_response::{
+        AuthMessage
+    },
 };
 
 #[derive(Deserialize, Debug)]

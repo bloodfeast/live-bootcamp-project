@@ -1,4 +1,4 @@
-use auth_service::AuthMessageResponse;
+use auth_service::http_response::AuthMessageResponse;
 use crate::helpers::{get_random_email, TestApp};
 
 #[tokio::test]
