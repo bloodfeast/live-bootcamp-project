@@ -4,8 +4,9 @@ use axum::{
     serve::Serve,
     Router,
 };
+use tokio::net::TcpListener;
 
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 
 pub mod routes;
 pub mod domain;
@@ -18,7 +19,7 @@ use app_state::AppState;
 // This struct encapsulates our application-related logic.
 #[derive(Debug)]
 pub struct Application {
-    server: Serve<Router, Router>,
+    server: Serve<TcpListener, Router, Router>,
     // address is exposed as a public field
     // so we have access to it in tests.
     address: String,
@@ -26,8 +27,11 @@ pub struct Application {
 
 impl Application {
     pub async fn build(app_state: AppState,address: &str) -> Result<Self, Box<dyn Error>> {
+        let serve_dir =
+            ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html"));
+
         let router = Router::new()
-            .nest_service("/", ServeDir::new("assets"))
+            .fallback_service(serve_dir)
             .route("/signup", post(routes::signup))
             .route("/login", post(routes::login))
             .route("/logout", post(routes::logout))
