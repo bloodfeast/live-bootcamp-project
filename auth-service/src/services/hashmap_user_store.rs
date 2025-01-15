@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::domain::{User, UserStore, UserStoreError};
+use crate::domain::{Email, Password, User, UserStore, UserStoreError};
 
 
 pub fn user_store_error_to_string(error: &UserStoreError) -> String {
@@ -14,31 +14,30 @@ pub fn user_store_error_to_string(error: &UserStoreError) -> String {
 
 #[derive(Default, Debug, Clone)]
 pub struct HashmapUserStore {
-    users: HashMap<String, User>,
+    users: HashMap<Email, User>,
 }
 #[async_trait::async_trait]
 impl UserStore for HashmapUserStore {
     async fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
-        // Return `UserStoreError::UserAlreadyExists` if the user already exists,
-        // otherwise insert the user into the hashmap and return `Ok(())`.
-        if self.users.contains_key(&user.email) {
+        let email = user.clone().email;
+        if self.users.contains_key(&email) {
             return Err(UserStoreError::UserAlreadyExists);
         }
-        self.users.insert(user.email.clone(), user);
+        self.users.insert(email, user);
         Ok(())
     }
 
-    async fn get_user(&self, email: &str) -> Result<&User, UserStoreError> {
+    async fn get_user(&self, email: &Email) -> Result<&User, UserStoreError> {
         match self.users.get(email) {
             Some(user) => Ok(user),
             None => Err(UserStoreError::UserNotFound),
         }
     }
 
-    async fn validate_user(&self, email: &str, password: &str) -> Result<(), UserStoreError> {
+    async fn validate_user(&self, email: &Email, password: &Password) -> Result<(), UserStoreError> {
         match self.users.get(email) {
             Some(user) => {
-                if user.password == password {
+                if user.password == password.clone() {
                     Ok(())
                 } else {
                     Err(UserStoreError::InvalidCredentials)
@@ -51,15 +50,20 @@ impl UserStore for HashmapUserStore {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
     use super::*;
-    use crate::domain::{User, UserStoreError};
+    use crate::domain::{AuthAPIError, User, UserStoreError};
 
     fn create_user_store() -> HashmapUserStore {
         HashmapUserStore::default()
     }
 
-    fn create_test_user() -> User {
-        User::new("some_email@some_domain.com".to_string(), "password123".to_string(), true)
+    fn create_test_user() -> Result<User, AuthAPIError> {
+        let email = Email::from_str("some.email@somedomain.com")
+            .unwrap();
+        let password = Password::from_str("password123")
+            .unwrap();
+        User::new(email, password, false)
     }
 
     async fn add_user_to_store(store: &mut HashmapUserStore, user: User) -> Result<(), UserStoreError> {
@@ -69,14 +73,16 @@ mod tests {
     #[tokio::test]
     async fn test_add_user() {
         let mut store = create_user_store();
-        let user = create_test_user();
+        let user = create_test_user()
+            .expect("Failed to create test user");
         assert!(store.add_user(user.clone()).await.is_ok());
     }
 
     #[tokio::test]
     async fn test_add_user_already_exists() {
         let mut store = create_user_store();
-        let user = create_test_user();
+        let user = create_test_user()
+            .expect("Failed to create test user");
 
         assert!(store.add_user(user.clone()).await.is_ok());
         assert_eq!(store.add_user(user.clone()).await, Err(UserStoreError::UserAlreadyExists));
@@ -85,7 +91,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_user() {
         let mut store = create_user_store();
-        let user = create_test_user();
+        let user = create_test_user()
+            .expect("Failed to create test user");
         add_user_to_store(&mut store, user.clone()).await.unwrap();
 
         assert_eq!(store.get_user(&user.email).await, Ok(&user));
@@ -94,7 +101,8 @@ mod tests {
     #[tokio::test]
     async fn test_validate_user() {
         let mut store = create_user_store();
-        let user = create_test_user();
+        let user = create_test_user()
+            .expect("Failed to create test user");
         add_user_to_store(&mut store, user.clone()).await.unwrap();
 
         assert_eq!(store.validate_user(&user.email, &user.password).await, Ok(()));

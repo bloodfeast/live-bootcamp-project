@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use axum::{
     Json,
     response::IntoResponse,
@@ -15,7 +16,7 @@ use crate::{
         AuthMessage
     },
 };
-use crate::domain::UserStore;
+use crate::domain::{Email, Password, UserStore};
 
 fn is_valid_email(email: &str) -> bool {
     match email {
@@ -47,15 +48,11 @@ pub async fn signup<T>(
 ) -> Result<impl IntoResponse, AuthAPIError>
 where T: UserStore + Clone + Send + Sync + 'static
 {
-    let email = request.email;
-    let password = request.password;
-
-    if !is_valid_email(&email) || !is_valid_password(&password) {
-        return Err(AuthAPIError::InvalidCredentials);
-    }
+    let email = Email::from_str(request.email.as_str())?;
+    let password = Password::from_str(&request.password)?;
 
     // Create a new `User` instance using data in the `request`
-    let user = User::new(email, password, request.requires_2fa);
+    let user = User::new(email, password, request.requires_2fa)?;
 
     let mut user_store = state.user_store.write().await;
 
