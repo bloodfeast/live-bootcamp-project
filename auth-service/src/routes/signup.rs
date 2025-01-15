@@ -16,6 +16,22 @@ use crate::{
     },
 };
 
+fn is_valid_email(email: &str) -> bool {
+    match email {
+        email if email.is_empty() => false,
+        email if !email.contains('@') => false,
+        _ => true,
+    }
+}
+
+fn is_valid_password(password: &str) -> bool {
+    match password {
+        password if password.is_empty() => false,
+        password if password.len() < 8 => false,
+        _ => true,
+    }
+}
+
 #[derive(Deserialize, Debug)]
 pub struct SignupRequest {
     pub email: String,
@@ -31,7 +47,7 @@ pub async fn signup(
     let email = request.email;
     let password = request.password;
 
-    if email.is_empty() || !email.contains('@') {
+    if !is_valid_email(&email) || !is_valid_password(&password) {
         return Err(AuthAPIError::InvalidCredentials);
     }
 

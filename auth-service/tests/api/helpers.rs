@@ -14,6 +14,10 @@ pub fn get_random_email() -> String {
     format!("{}@example.com", Uuid::new_v4())
 }
 
+pub fn get_malformed_email() -> String {
+    "example.com".to_owned()
+}
+
 impl TestApp {
     pub async fn new() -> Self {
         let user_store = HashmapUserStore::default();
