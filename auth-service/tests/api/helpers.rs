@@ -1,4 +1,11 @@
+use std::sync::Arc;
+use serde_json::json;
+use tokio::sync::RwLock;
 use uuid::Uuid;
+use auth_service::app_state::AppState;
+use auth_service::Application;
+use auth_service::routes::{login, logout, signup};
+use auth_service::services::hashmap_user_store::HashmapUserStore;
 
 pub struct TestApp {
     pub address: String,
@@ -11,14 +18,19 @@ pub fn get_random_email() -> String {
 
 impl TestApp {
     pub async fn new() -> Self {
-        let app = auth_service::Application::build("127.0.0.1:0")
+        let user_store = HashmapUserStore::default();
+        let app_state = AppState::new(Arc::new(RwLock::new(user_store)));
+
+        let app = Application::build(app_state, "0.0.0.0:0")
             .await
-            .expect("Failed to build application");
-        let address = format!("http://{}", app.address.clone());
+            .expect("Failed to build app");
+
+        let address = format!("http://{}", app.address().to_string());
 
         #[allow(clippy::let_underscore_future)]
         let _ = tokio::spawn(app.run());
         let http_client = reqwest::Client::new();
+
 
         Self {
             address,
