@@ -1,10 +1,8 @@
 use std::sync::Arc;
-use serde_json::json;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 use auth_service::app_state::AppState;
 use auth_service::Application;
-use auth_service::routes::{login, logout, signup};
 use auth_service::services::hashmap_user_store::HashmapUserStore;
 
 pub struct TestApp {
