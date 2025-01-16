@@ -25,7 +25,7 @@ impl FromStr for Password {
 
         Ok(Password {
             password: s.to_string(),
-            is_valid: false,
+            is_valid
         })
     }
 }

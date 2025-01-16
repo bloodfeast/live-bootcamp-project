@@ -23,7 +23,7 @@ impl FromStr for Email {
         };
         Ok(Email {
             email: s.to_string(),
-            is_valid: false,
+            is_valid
         })
     }
 }
