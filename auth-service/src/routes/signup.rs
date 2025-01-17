@@ -5,7 +5,6 @@ use axum::{
     extract::State,
 };
 use serde::{Deserialize};
-use tokio::io::AsyncWriteExt;
 use crate::{
     app_state::AppState,
     domain::{
@@ -17,6 +16,7 @@ use crate::{
     },
 };
 use crate::domain::{Email, Password, UserStore};
+
 #[derive(Deserialize, Debug)]
 pub struct SignupRequest {
     pub email: String,

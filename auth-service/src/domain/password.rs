@@ -4,7 +4,6 @@ use crate::domain::AuthAPIError;
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Password {
     password: String,
-    is_valid: bool,
 }
 
 impl AsRef<str> for Password {
@@ -25,7 +24,6 @@ impl FromStr for Password {
 
         Ok(Password {
             password: s.to_string(),
-            is_valid
         })
     }
 }

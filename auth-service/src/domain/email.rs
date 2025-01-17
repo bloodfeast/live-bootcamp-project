@@ -4,7 +4,6 @@ use crate::domain::AuthAPIError;
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Email {
     email: String,
-    is_valid: bool,
 }
 
 
@@ -23,7 +22,6 @@ impl FromStr for Email {
         };
         Ok(Email {
             email: s.to_string(),
-            is_valid
         })
     }
 }
