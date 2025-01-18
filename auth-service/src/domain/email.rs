@@ -15,6 +15,27 @@ impl AsRef<str> for Email {
 impl FromStr for Email {
     type Err = AuthAPIError;
 
+    /// ###### Slight deviation from the course material
+    /// Implemented `FromStr` trait for `Email`. \
+    /// This approach just feels more ergonomic to me,
+    /// but it's really personal preference.
+    ///
+    /// ##### Arguments
+    /// * `s` - A string slice that holds the email
+    ///
+    /// ##### Returns
+    /// A `Result` containing a `Email` instance if the string is a valid email,
+    /// otherwise an `InvalidCredentials` error.
+    ///
+    /// # Examples
+    /// ```
+    /// use std::str::FromStr;
+    /// use auth_service::domain::Email;
+    /// use auth_service::domain::AuthAPIError;
+    ///
+    /// let email = Email::from_str("some.email@domain.com");
+    /// assert!(email.is_ok());
+    /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let is_valid = !s.is_empty() && validator::ValidateEmail::validate_email(&s);
         if !is_valid {

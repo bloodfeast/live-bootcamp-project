@@ -25,6 +25,12 @@ pub struct SignupRequest {
     pub requires_2fa: bool,
 }
 
+/// signup route handler
+///
+/// we also had to add the `UserStore` trait bound to the `T` type parameter,
+/// so we can call the `add_user` method on the `UserStore` instance.
+///
+/// - see also [app_state.rs](crate::app_state::AppState)
 pub async fn signup<T>(
     State(state): State<AppState<T>>,
     Json(request): Json<SignupRequest>,

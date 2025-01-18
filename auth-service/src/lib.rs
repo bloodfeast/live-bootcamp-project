@@ -28,6 +28,10 @@ pub struct Application {
 
 impl Application
 {
+    /// We have to implement the generic trait `UserStore` for the `Application` struct.
+    /// since we chose to use a generic implementation over a trait object.
+    ///
+    /// - see also [app_state.rs](crate::app_state::AppState)
     pub async fn build<T>(app_state: AppState<T>, address: &str) -> Result<Self, Box<dyn Error>>
     where
         T: UserStore + Clone + Send + Sync + 'static,

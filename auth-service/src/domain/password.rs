@@ -15,6 +15,25 @@ impl AsRef<str> for Password {
 impl FromStr for Password {
     type Err = AuthAPIError;
 
+    /// Implemented `FromStr` trait for `Password`. \
+    /// in the same fashion as [Email](crate::domain::Email::from_str)
+    ///
+    /// ##### Arguments
+    /// * `s` - A string slice that holds the password
+    ///
+    /// ##### Returns
+    /// A `Result` containing a `Password` instance if the string is a valid password,
+    /// otherwise an `InvalidCredentials` error.
+    ///
+    /// ##### Examples
+    /// ```
+    /// use std::str::FromStr;
+    /// use auth_service::domain::Password;
+    /// use auth_service::domain::AuthAPIError;
+    ///
+    /// let password = Password::from_str("password123");
+    /// assert!(password.is_ok());
+    /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let is_valid = validate_password(&s);
 
@@ -27,7 +46,6 @@ impl FromStr for Password {
         })
     }
 }
-
 
 fn validate_password(password: &str) -> bool {
     let length_check = validator::ValidateLength::validate_length(password, Some(8), Some(32), None);
