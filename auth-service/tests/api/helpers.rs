@@ -68,16 +68,16 @@ impl TestApp {
             .expect("Failed to send request")
     }
 
-    pub async fn post_login<T>(&self, body: &T) -> reqwest::Response
-    where T: serde::Serialize + ?Sized
+    pub async fn post_login<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
     {
         self.http_client
             .post(&format!("{}/login", &self.address))
-            .header("content-type", "application/json")
-            .json(&body)
+            .json(body)
             .send()
             .await
-            .expect("Failed to send request")
+            .expect("Failed to execute request.")
     }
 
     pub async fn post_logout<T>(&self, body: &T) -> reqwest::Response
