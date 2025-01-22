@@ -13,6 +13,7 @@ pub mod domain;
 pub mod services;
 pub mod app_state;
 pub mod http_response;
+pub mod utils;
 
 use app_state::AppState;
 use crate::domain::UserStore;
