@@ -1,7 +1,6 @@
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use axum::response::IntoResponse;
 use crate::app_state::AppState;
 use crate::domain::{AuthAPIError, BannedTokenStore, UserStore};
 
