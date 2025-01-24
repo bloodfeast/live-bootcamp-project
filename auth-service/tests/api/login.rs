@@ -1,4 +1,4 @@
-use auth_service::utils::JWT_COOKIE_NAME;
+use auth_service::utils::constants::JWT_COOKIE_NAME;
 use crate::helpers::{
     TestApp,
     get_random_email,

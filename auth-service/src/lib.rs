@@ -4,8 +4,9 @@ use axum::{
     serve::Serve,
     Router,
 };
+use axum::http::Method;
 use tokio::net::TcpListener;
-
+use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
 
 pub mod routes;
@@ -40,8 +41,19 @@ impl Application
     where
         T: UserStore + Clone + Send + Sync + 'static,
     {
+
+        let allowed_origins = [
+            "http://localhost:8000".parse()?,
+            "http://142.93.14.57:8000".parse()?,
+        ];
+
         let serve_dir =
             ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html"));
+
+        let cors = CorsLayer::new()
+            .allow_methods([Method::GET, Method::POST])
+            .allow_credentials(true)
+            .allow_origin(allowed_origins);
 
         let router = Router::new()
             .fallback_service(serve_dir)
@@ -50,7 +62,8 @@ impl Application
             .route("/logout", post(routes::logout))
             .route("/verify-2fa", post(routes::verify_2fa))
             .route("/verify-token", post(routes::verify_token))
-            .with_state(app_state);
+            .with_state(app_state)
+            .layer(cors);
 
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?.to_string();

@@ -4,8 +4,8 @@ use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
 use crate::domain::Email;
-use crate::utils::JWT_SECRET;
-use super::constants::JWT_COOKIE_NAME;
+
+use super::constants::{JWT_COOKIE_NAME, JWT_SECRET};
 
 
 // Create cookie with a new JWT auth token

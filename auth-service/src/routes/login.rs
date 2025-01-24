@@ -6,6 +6,7 @@ use axum::response::IntoResponse;
 use axum_extra::extract::CookieJar;
 use crate::app_state::AppState;
 use crate::domain::{AuthAPIError, Email, Password, UserStore};
+use crate::utils::auth::generate_auth_cookie;
 
 #[derive(serde::Deserialize)]
 pub struct LoginRequest {
@@ -43,7 +44,7 @@ where T: UserStore + Clone + Send + Sync + 'static
         Err(_) => StatusCode::UNAUTHORIZED.into_response()
     };
 
-    let auth_cookie = match crate::utils::generate_auth_cookie(&email) {
+    let auth_cookie = match generate_auth_cookie(&email) {
         Ok(cookie) => cookie,
         Err(_) => return (jar, Err(AuthAPIError::UnexpectedError))
     };
