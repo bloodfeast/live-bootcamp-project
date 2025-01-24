@@ -7,6 +7,7 @@ pub enum UserStoreError {
     UserNotFound,
     InvalidCredentials,
     UnexpectedError,
+    TokenBanned,
 }
 
 

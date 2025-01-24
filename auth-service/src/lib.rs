@@ -63,6 +63,7 @@ impl Application
             .route("/logout", post(routes::logout))
             .route("/verify-2fa", post(routes::verify_2fa))
             .route("/verify-token", post(routes::verify_token))
+            .route("/refresh-token", post(routes::refresh_token))
             .with_state(app_state)
             .layer(cors);
 

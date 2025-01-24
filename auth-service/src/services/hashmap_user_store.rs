@@ -9,6 +9,7 @@ pub fn user_store_error_to_string(error: &UserStoreError) -> String {
         UserStoreError::UserNotFound => "User not found".to_string(),
         UserStoreError::InvalidCredentials => "Invalid credentials".to_string(),
         UserStoreError::UnexpectedError => "Unexpected error".to_string(),
+        UserStoreError::TokenBanned => "Token banned".to_string(),
     }
 }
 

@@ -118,4 +118,16 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    pub async fn post_refresh_token<T>(&self, body: &T) -> reqwest::Response
+    where T: serde::Serialize + ?Sized
+    {
+        self.http_client
+            .post(&format!("{}/refresh-token", &self.address))
+            .header("content-type", "application/json")
+            .json(&body)
+            .send()
+            .await
+            .expect("Failed to send request")
+    }
+
 }

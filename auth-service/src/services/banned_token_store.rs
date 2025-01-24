@@ -9,6 +9,9 @@ pub struct HashSetBannedTokenStore {
 #[async_trait::async_trait]
 impl BannedTokenStore for HashSetBannedTokenStore {
     async fn add_banned_token(&mut self, token: String) -> Result<(), UserStoreError> {
+        if self.banned_tokens.contains(&token) {
+            return Err(UserStoreError::TokenBanned);
+        }
         self.banned_tokens.insert(token);
         Ok(())
     }
