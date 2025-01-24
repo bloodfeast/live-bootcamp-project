@@ -19,3 +19,12 @@ where
     async fn get_user(&self, email: &Email) -> Result<&User, UserStoreError>;
     async fn validate_user(&self, email: &Email, password: &Password) -> Result<(), UserStoreError>;
 }
+
+#[async_trait::async_trait]
+pub trait BannedTokenStore
+where
+    Self: Sized + Send + Sync,
+{
+    async fn add_banned_token(&mut self, token: String) -> Result<(), UserStoreError>;
+    async fn is_banned(&self, token: &str) -> Result<bool, UserStoreError>;
+}

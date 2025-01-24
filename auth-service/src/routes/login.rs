@@ -5,7 +5,7 @@ use axum::Json;
 use axum::response::IntoResponse;
 use axum_extra::extract::CookieJar;
 use crate::app_state::AppState;
-use crate::domain::{AuthAPIError, Email, Password, UserStore};
+use crate::domain::{AuthAPIError, BannedTokenStore, Email, Password, UserStore};
 use crate::utils::auth::generate_auth_cookie;
 
 #[derive(serde::Deserialize)]
@@ -14,12 +14,13 @@ pub struct LoginRequest {
     pub password: String,
 }
 
-pub async fn login<T>(
-    State(state): State<AppState<T>>,
+pub async fn login<T, U>(
+    State(state): State<AppState<T, U>>,
     jar: CookieJar,
     Json(request): Json<LoginRequest>,
 ) -> (CookieJar, Result<impl IntoResponse, AuthAPIError>)
-where T: UserStore + Clone + Send + Sync + 'static
+where T: UserStore + Clone + Send + Sync + 'static,
+      U: BannedTokenStore + Clone + Send + Sync + 'static,
 {
     let email = match Email::from_str(request.email.as_str()) {
         Ok(email) => email,

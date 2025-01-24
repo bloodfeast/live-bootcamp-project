@@ -17,7 +17,7 @@ pub mod http_response;
 pub mod utils;
 
 use app_state::AppState;
-use crate::domain::UserStore;
+use crate::domain::{BannedTokenStore, UserStore};
 
 // This struct encapsulates our application-related logic.
 #[derive(Debug)]
@@ -37,9 +37,10 @@ impl Application
     /// `UserStore` + `Clone` + `Send` + `Sync` + `'static`
     ///
     /// **see also [app_state.rs](crate::app_state::AppState)**
-    pub async fn build<T>(app_state: AppState<T>, address: &str) -> Result<Self, Box<dyn Error>>
+    pub async fn build<T, U>(app_state: AppState<T, U>, address: &str) -> Result<Self, Box<dyn Error>>
     where
         T: UserStore + Clone + Send + Sync + 'static,
+        U: BannedTokenStore + Clone + Send + Sync + 'static,
     {
 
         let allowed_origins = [

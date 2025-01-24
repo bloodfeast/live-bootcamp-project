@@ -15,7 +15,7 @@ use crate::{
         AuthMessage
     },
 };
-use crate::domain::{Email, Password, UserStore};
+use crate::domain::{BannedTokenStore, Email, Password, UserStore};
 
 #[derive(Deserialize, Debug)]
 pub struct SignupRequest {
@@ -31,11 +31,12 @@ pub struct SignupRequest {
 /// so we can call the `add_user` method on the `UserStore` instance.
 ///
 /// - see also [app_state.rs](crate::app_state::AppState)
-pub async fn signup<T>(
-    State(state): State<AppState<T>>,
+pub async fn signup<T, U>(
+    State(state): State<AppState<T, U>>,
     Json(request): Json<SignupRequest>,
 ) -> Result<impl IntoResponse, AuthAPIError>
-where T: UserStore + Clone + Send + Sync + 'static
+where T: UserStore + Clone + Send + Sync + 'static,
+      U: BannedTokenStore + Clone + Send + Sync + 'static,
 {
     let email = Email::from_str(request.email.as_str())?;
     let password = Password::from_str(&request.password)?;
