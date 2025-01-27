@@ -85,8 +85,6 @@ where T: UserStore + Clone + Send + Sync + 'static,
     let login_attempt_id = LoginAttemptId::default();
     let two_fa_code = TwoFACode::default();
 
-    println!("2FA code: {}", two_fa_code);
-
     let mut two_fa_code_store = state.two_fa_code_store.write().await;
     two_fa_code_store.add_code(email, login_attempt_id.clone(), two_fa_code.clone())
         .await
@@ -96,7 +94,6 @@ where T: UserStore + Clone + Send + Sync + 'static,
         message: "2FA required".to_string(),
         login_attempt_id: login_attempt_id.as_ref().to_string(),
     };
-
 
     Ok((
         jar,
