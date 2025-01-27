@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::domain::{BannedTokenStore, UserStore};
+use crate::domain::{BannedTokenStore, TwoFACodeStore, UserStore};
 
 /// The `AppState` struct holds the application state.
 /// It contains a reference to the user store.
@@ -28,16 +28,18 @@ use crate::domain::{BannedTokenStore, UserStore};
 /// **see: [Application::build](crate::Application::build)**
 ///
 #[derive(Clone)]
-pub struct AppState<T: UserStore, U: BannedTokenStore> {
+pub struct AppState<T: UserStore, U: BannedTokenStore, V: TwoFACodeStore> {
     pub user_store: Arc<RwLock<T>>,
     pub banned_token_store: Arc<RwLock<U>>,
+    pub two_fa_code_store: Arc<RwLock<V>>,
 }
 
-impl <T, U>AppState<T, U>
+impl <T, U, V>AppState<T, U, V>
 where T: UserStore + Clone,
-      U: BannedTokenStore + Clone
+      U: BannedTokenStore + Clone,
+      V: TwoFACodeStore + Clone
 {
-    pub fn new(user_store: Arc<RwLock<T>>, banned_token_store: Arc<RwLock<U>>) -> Self {
-        Self { user_store, banned_token_store }
+    pub fn new(user_store: Arc<RwLock<T>>, banned_token_store: Arc<RwLock<U>>, two_fa_code_store: Arc<RwLock<V>>) -> Self {
+        Self { user_store, banned_token_store, two_fa_code_store }
     }
 }

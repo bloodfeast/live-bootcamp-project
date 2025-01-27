@@ -1,3 +1,4 @@
+use auth_service::routes::TwoFactorAuthResponse;
 use auth_service::utils::constants::JWT_COOKIE_NAME;
 use crate::helpers::{
     TestApp,
@@ -12,14 +13,14 @@ async fn login_returns_200() {
     let response = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
     let response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 200);
 }
@@ -65,7 +66,7 @@ async fn login_returns_422_on_malformed_credentials() {
     let response = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
@@ -75,7 +76,7 @@ async fn login_returns_422_on_malformed_credentials() {
         }),
         serde_json::json!({
             "email": email,
-            "requires2FA": true
+            "requires2FA": false
         }),
     ];
 
@@ -91,13 +92,13 @@ async fn login_returns_422_on_malformed_credentials() {
 }
 
 #[tokio::test]
-async fn login_returns_401_on_invalid_credentials() {
+async fn login_returns_400_on_invalid_credentials() {
     let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
@@ -116,7 +117,7 @@ async fn login_returns_401_on_invalid_credentials() {
         let response = app.post_login(test_case).await;
         assert_eq!(
             response.status().as_u16(),
-            401,
+            400,
             "Failed for input: {:?}",
             test_case
         );
@@ -124,13 +125,13 @@ async fn login_returns_401_on_invalid_credentials() {
 }
 
 #[tokio::test]
-async fn login_returns_401_on_non_existent_user() {
+async fn login_returns_400_on_non_existent_user() {
     let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
@@ -138,5 +139,41 @@ async fn login_returns_401_on_non_existent_user() {
         "email": get_random_email(),
         "password": "password",
     })).await;
-    assert_eq!(response.status().as_u16(), 401);
+    assert_eq!(response.status().as_u16(), 400);
+}
+
+#[tokio::test]
+async fn should_return_206_if_valid_credentials_and_2fa_enabled() {
+
+    let app = TestApp::new().await;
+
+    let random_email = get_random_email();
+
+    let signup_body = serde_json::json!({
+        "email": random_email,
+        "password": "password123",
+        "requires2FA": true
+    });
+
+    let response = app.post_signup(&signup_body).await;
+
+    assert_eq!(response.status().as_u16(), 201);
+
+    let login_body = serde_json::json!({
+        "email": random_email,
+        "password": "password123",
+        "requires2FA": true
+    });
+
+    let response = app.post_login(&login_body).await;
+
+
+    assert_eq!(response.status().as_u16(), 200);
+
+    let json_body = response
+        .json::<TwoFactorAuthResponse>()
+        .await
+        .expect("Could not deserialize response body to TwoFactorAuthResponse");
+
+    assert_eq!(json_body.message, "2FA required".to_owned());
 }

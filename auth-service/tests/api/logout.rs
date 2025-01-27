@@ -9,13 +9,13 @@ async fn logout_returns_200() {
     let _ = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let _ = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let response = app.post_logout(r#"{"email": "[email protected]"}"#).await;

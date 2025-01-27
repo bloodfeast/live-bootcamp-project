@@ -4,7 +4,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 use auth_service::app_state::AppState;
 use auth_service::Application;
-use auth_service::services::{HashmapUserStore, HashSetBannedTokenStore};
+use auth_service::services::{HashmapTwoFACodeStore, HashmapUserStore, HashSetBannedTokenStore};
 use auth_service::utils::constants::test;
 
 pub struct TestApp {
@@ -25,7 +25,8 @@ impl TestApp {
     pub async fn new() -> Self {
         let app_state = AppState::new(
             Arc::new(RwLock::new(HashmapUserStore::default())),
-            Arc::new(RwLock::new(HashSetBannedTokenStore::default()))
+            Arc::new(RwLock::new(HashSetBannedTokenStore::default())),
+            Arc::new(RwLock::new(HashmapTwoFACodeStore::default())),
         );
 
         let app = Application::build(app_state, test::APP_ADDRESS)

@@ -12,13 +12,13 @@ async fn should_return_200_if_token_is_not_banned() {
     let _ = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let login_response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let token = login_response.headers().get("set-cookie")
@@ -57,13 +57,13 @@ async fn should_return_401_if_invalid_token() {
     let _ = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let login_response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let token = login_response.headers().get("set-cookie")

@@ -7,14 +7,14 @@ async fn refresh_token_returns_200() {
     let response = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
     let login_response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let token = login_response.headers().get("set-cookie")
@@ -39,14 +39,14 @@ async fn refresh_token_returns_401_on_invalid_token() {
     let response = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
     let login_response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let token = login_response.headers().get("set-cookie")
@@ -75,14 +75,14 @@ async fn refresh_token_returns_400_on_invalid_email() {
     let response = app.post_signup(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
     let login_response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
-        "requires2FA": true
+        "requires2FA": false
     })).await;
 
     let token = login_response.headers().get("set-cookie")
