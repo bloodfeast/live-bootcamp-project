@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::domain::{BannedTokenStore, TwoFACodeStore, UserStore};
+use crate::domain::{BannedTokenStore, EmailClient, TwoFACodeStore, UserStore};
 
 /// The `AppState` struct holds the application state.
 /// It contains a reference to the user store.
@@ -28,18 +28,20 @@ use crate::domain::{BannedTokenStore, TwoFACodeStore, UserStore};
 /// **see: [Application::build](crate::Application::build)**
 ///
 #[derive(Clone)]
-pub struct AppState<T: UserStore, U: BannedTokenStore, V: TwoFACodeStore> {
+pub struct AppState<T: UserStore, U: BannedTokenStore, V: TwoFACodeStore, W: EmailClient> {
     pub user_store: Arc<RwLock<T>>,
     pub banned_token_store: Arc<RwLock<U>>,
     pub two_fa_code_store: Arc<RwLock<V>>,
+    pub email_client: Arc<RwLock<W>>,
 }
 
-impl <T, U, V>AppState<T, U, V>
+impl <T, U, V, W>AppState<T, U, V, W>
 where T: UserStore + Clone,
       U: BannedTokenStore + Clone,
-      V: TwoFACodeStore + Clone
+      V: TwoFACodeStore + Clone,
+      W: EmailClient + Clone
 {
-    pub fn new(user_store: Arc<RwLock<T>>, banned_token_store: Arc<RwLock<U>>, two_fa_code_store: Arc<RwLock<V>>) -> Self {
-        Self { user_store, banned_token_store, two_fa_code_store }
+    pub fn new(user_store: Arc<RwLock<T>>, banned_token_store: Arc<RwLock<U>>, two_fa_code_store: Arc<RwLock<V>>, email_client: Arc<RwLock<W>>) -> Self {
+        Self { user_store, banned_token_store, two_fa_code_store, email_client }
     }
 }

@@ -4,7 +4,7 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum_extra::extract::CookieJar;
 use crate::app_state::AppState;
-use crate::domain::{AuthAPIError, BannedTokenStore, Email, TwoFACodeStore, UserStore};
+use crate::domain::{AuthAPIError, BannedTokenStore, Email, EmailClient, TwoFACodeStore, UserStore};
 use crate::utils::auth::generate_auth_cookie;
 use crate::utils::constants::JWT_COOKIE_NAME;
 
@@ -14,14 +14,15 @@ pub struct RefreshTokenRequest {
     pub token: String,
 }
 
-pub async fn refresh_token<T, U, V>(
-    State(state): State<AppState<T, U, V>>,
+pub async fn refresh_token<T, U, V, W>(
+    State(state): State<AppState<T, U, V, W>>,
     jar: CookieJar,
     Json(request): Json<RefreshTokenRequest>,
 ) -> Result<(CookieJar, StatusCode), AuthAPIError>
 where T: UserStore + Clone + Send + Sync + 'static,
       U: BannedTokenStore + Clone + Send + Sync + 'static,
       V: TwoFACodeStore + Clone + Send + Sync + 'static,
+      W: EmailClient + Clone + Send + Sync + 'static
 {
     let email = Email::from_str(request.email.as_str())
         .map_err(|_| AuthAPIError::InvalidCredentials)?;

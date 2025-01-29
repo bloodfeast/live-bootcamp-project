@@ -2,20 +2,21 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use crate::app_state::AppState;
-use crate::domain::{AuthAPIError, BannedTokenStore, TwoFACodeStore, UserStore};
+use crate::domain::{AuthAPIError, BannedTokenStore, EmailClient, TwoFACodeStore, UserStore};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct VerifyTokenRequest {
     pub token: String,
 }
 
-pub async fn verify_token<T, U, V>(
-    State(state): State<AppState<T, U, V>>,
+pub async fn verify_token<T, U, V, W>(
+    State(state): State<AppState<T, U, V, W>>,
     Json(request): Json<VerifyTokenRequest>,
 ) -> Result<StatusCode, AuthAPIError>
 where T: UserStore + Clone + Send + Sync + 'static,
       U: BannedTokenStore + Clone + Send + Sync + 'static,
       V: TwoFACodeStore + Clone + Send + Sync + 'static,
+      W: EmailClient + Clone + Send + Sync + 'static
 {
     let token = request.token;
 

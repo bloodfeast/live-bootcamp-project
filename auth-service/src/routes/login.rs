@@ -5,9 +5,8 @@ use axum::Json;
 use axum::response::IntoResponse;
 use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
 use crate::app_state::AppState;
-use crate::domain::{AuthAPIError, BannedTokenStore, Email, LoginAttemptId, Password, TwoFACode, TwoFACodeStore, UserStore};
+use crate::domain::{AuthAPIError, BannedTokenStore, Email, EmailClient, LoginAttemptId, Password, TwoFACode, TwoFACodeStore, UserStore};
 use crate::utils::auth::generate_auth_cookie;
 
 #[derive(serde::Deserialize)]
@@ -15,6 +14,7 @@ pub struct LoginRequest {
     pub email: String,
     pub password: String,
 }
+
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum LoginResponse {
@@ -22,7 +22,6 @@ pub enum LoginResponse {
     TwoFactorAuth(TwoFactorAuthResponse),
 }
 
-// If a user requires 2FA, this JSON body should be returned!
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TwoFactorAuthResponse {
     pub message: String,
@@ -30,14 +29,15 @@ pub struct TwoFactorAuthResponse {
     pub login_attempt_id: String,
 }
 
-pub async fn login<T, U, V>(
-    State(state): State<AppState<T, U, V>>,
+pub async fn login<T, U, V, W>(
+    State(state): State<AppState<T, U, V, W>>,
     jar: CookieJar,
     Json(request): Json<LoginRequest>,
 ) -> Result<(CookieJar, impl IntoResponse), AuthAPIError>
 where T: UserStore + Clone + Send + Sync + 'static,
       U: BannedTokenStore + Clone + Send + Sync + 'static,
       V: TwoFACodeStore + Clone + Send + Sync + 'static,
+      W: EmailClient + Clone + Send + Sync + 'static
 {
     let email = Email::from_str(request.email.as_str())
         .map_err(|_| AuthAPIError::InvalidCredentials)?;
@@ -69,9 +69,9 @@ where T: UserStore + Clone + Send + Sync + 'static,
     }
 }
 
-async fn handle_2fa<T, U, V>(
+async fn handle_2fa<T, U, V, W>(
     email: &Email,
-    state: &AppState<T, U, V>,
+    state: &AppState<T, U, V, W>,
     jar: CookieJar,
 ) -> Result<(
     CookieJar,
@@ -81,6 +81,7 @@ async fn handle_2fa<T, U, V>(
 where T: UserStore + Clone + Send + Sync + 'static,
       U: BannedTokenStore + Clone + Send + Sync + 'static,
       V: TwoFACodeStore + Clone + Send + Sync + 'static,
+      W: EmailClient + Clone + Send + Sync + 'static
 {
     let login_attempt_id = LoginAttemptId::default();
     let two_fa_code = TwoFACode::default();
@@ -102,18 +103,15 @@ where T: UserStore + Clone + Send + Sync + 'static,
     ))
 }
 
-// New!
 async fn handle_no_2fa(
     email: &Email,
     jar: CookieJar,
-) -> Result<
-    (
+) -> Result<(
         CookieJar,
         StatusCode,
         Json<LoginResponse>
-    ),
-    AuthAPIError
-> {
+    ), AuthAPIError>
+{
     let auth_cookie = generate_auth_cookie(email)
         .map_err(|_| AuthAPIError::UnexpectedError)?;
     let updated_jar = jar.add(auth_cookie);
