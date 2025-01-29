@@ -60,11 +60,11 @@ where T: UserStore + Clone + Send + Sync + 'static,
     match user.requires_2fa {
         true => handle_2fa(&email, &state, updated_jar).await
             .map(|(jar, status, json_response)|
-                Ok((jar, json_response))
+                Ok((jar, (status, json_response)))
             )?,
         false => handle_no_2fa(&user.email, updated_jar).await
             .map(|(jar, status, json_response)|
-                Ok((jar, json_response))
+                Ok((jar, (status, json_response)))
             )?,
     }
 }
@@ -112,8 +112,8 @@ async fn handle_no_2fa(
         StatusCode,
         Json<LoginResponse>
     ),
-    AuthAPIError>
-{
+    AuthAPIError
+> {
     let auth_cookie = generate_auth_cookie(email)
         .map_err(|_| AuthAPIError::UnexpectedError)?;
     let updated_jar = jar.add(auth_cookie);
