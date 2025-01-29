@@ -6,7 +6,17 @@ use axum::response::IntoResponse;
 use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
 use crate::app_state::AppState;
-use crate::domain::{AuthAPIError, BannedTokenStore, Email, EmailClient, LoginAttemptId, Password, TwoFACode, TwoFACodeStore, UserStore};
+use crate::domain::{
+    AuthAPIError,
+    BannedTokenStore,
+    Email,
+    EmailClient,
+    LoginAttemptId,
+    Password,
+    TwoFACode,
+    TwoFACodeStore,
+    UserStore
+};
 use crate::utils::auth::generate_auth_cookie;
 
 #[derive(serde::Deserialize)]
@@ -48,9 +58,8 @@ where T: UserStore + Clone + Send + Sync + 'static,
     let user = user_store.get_user(&email).await
         .map_err(|_| AuthAPIError::InvalidCredentials)?;
 
-    match user.password == password {
-        true => {},
-        false => return Err(AuthAPIError::InvalidCredentials),
+    if user.password != password {
+        return Err(AuthAPIError::InvalidCredentials);
     };
 
     let auth_cookie = generate_auth_cookie(&email)
@@ -88,6 +97,12 @@ where T: UserStore + Clone + Send + Sync + 'static,
 
     let mut two_fa_code_store = state.two_fa_code_store.write().await;
     two_fa_code_store.add_code(email, login_attempt_id.clone(), two_fa_code.clone())
+        .await
+        .map_err(|_| AuthAPIError::UnexpectedError)?;
+
+    state.email_client.write()
+        .await
+        .send_email(email, "2 factor auth code", two_fa_code.to_string().as_str())
         .await
         .map_err(|_| AuthAPIError::UnexpectedError)?;
 
