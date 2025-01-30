@@ -96,14 +96,11 @@ where T: UserStore + Clone + Send + Sync + 'static,
     let two_fa_code = TwoFACode::default();
 
     let mut two_fa_code_store = state.two_fa_code_store.write().await;
-    two_fa_code_store.add_code(email, login_attempt_id.clone(), two_fa_code.clone())
-        .await
+    two_fa_code_store.add_code(email, login_attempt_id.clone(), two_fa_code.clone()).await
         .map_err(|_| AuthAPIError::UnexpectedError)?;
 
-    state.email_client.write()
-        .await
-        .send_email(email, "2 factor auth code", two_fa_code.to_string().as_str())
-        .await
+    state.email_client.write().await
+        .send_email(email, "2 factor auth code", two_fa_code.to_string().as_str()).await
         .map_err(|_| AuthAPIError::UnexpectedError)?;
 
     let response = TwoFactorAuthResponse {
