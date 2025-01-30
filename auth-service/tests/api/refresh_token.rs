@@ -69,7 +69,7 @@ async fn refresh_token_returns_401_on_invalid_token() {
 }
 
 #[tokio::test]
-async fn refresh_token_returns_400_on_invalid_email() {
+async fn refresh_token_returns_401_on_invalid_email() {
     let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
@@ -97,6 +97,6 @@ async fn refresh_token_returns_400_on_invalid_email() {
         "token": token
     })).await;
 
-    assert_eq!(response.status().as_u16(), 400);
+    assert_eq!(response.status().as_u16(), 401);
 }
 

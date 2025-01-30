@@ -92,7 +92,7 @@ async fn login_returns_422_on_malformed_credentials() {
 }
 
 #[tokio::test]
-async fn login_returns_400_on_invalid_credentials() {
+async fn login_returns_401_on_invalid_credentials() {
     let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
@@ -117,7 +117,7 @@ async fn login_returns_400_on_invalid_credentials() {
         let response = app.post_login(test_case).await;
         assert_eq!(
             response.status().as_u16(),
-            400,
+            401,
             "Failed for input: {:?}",
             test_case
         );
@@ -125,7 +125,7 @@ async fn login_returns_400_on_invalid_credentials() {
 }
 
 #[tokio::test]
-async fn login_returns_400_on_non_existent_user() {
+async fn login_returns_401_on_non_existent_user() {
     let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
@@ -139,7 +139,7 @@ async fn login_returns_400_on_non_existent_user() {
         "email": get_random_email(),
         "password": "password",
     })).await;
-    assert_eq!(response.status().as_u16(), 400);
+    assert_eq!(response.status().as_u16(), 401);
 }
 
 #[tokio::test]

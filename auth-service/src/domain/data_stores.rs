@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display};
+use std::str::FromStr;
 use super::{Email, Password, User};
 
 #[derive(Debug, PartialEq)]
@@ -26,6 +27,14 @@ where
         uuid::Uuid::parse_str(&id)
             .map(|_| Self(id))
             .map_err(|_| "Invalid LoginAttemptId".to_string())
+    }
+}
+
+impl FromStr for LoginAttemptId {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s.to_string())
     }
 }
 
@@ -68,6 +77,14 @@ where
         } else {
             Err("Invalid TwoFACode".to_string())
         }
+    }
+}
+
+impl FromStr for TwoFACode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s.to_string())
     }
 }
 

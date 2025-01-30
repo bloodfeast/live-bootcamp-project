@@ -96,8 +96,8 @@ impl TestApp {
             .expect("Failed to send request")
     }
 
-    pub async fn post_verify_2fa<T>(&self, body: &T) -> reqwest::Response
-    where T: serde::Serialize + ?Sized
+    pub async fn post_verify_2fa<Body>(&self, body: &Body) -> reqwest::Response
+    where Body: serde::Serialize + ?Sized
     {
         self.http_client
             .post(&format!("{}/verify-2fa", &self.address))

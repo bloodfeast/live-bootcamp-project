@@ -62,16 +62,13 @@ where T: UserStore + Clone + Send + Sync + 'static,
         return Err(AuthAPIError::InvalidCredentials);
     };
 
-    let auth_cookie = generate_auth_cookie(&email)
-        .map_err(|_| AuthAPIError::UnexpectedError)?;
-    let updated_jar = jar.add(auth_cookie);
 
     match user.requires_2fa {
-        true => handle_2fa(&email, &state, updated_jar).await
+        true => handle_2fa(&email, &state, jar).await
             .map(|(jar, status, json_response)|
                 Ok((jar, (status, json_response)))
             )?,
-        false => handle_no_2fa(&user.email, updated_jar).await
+        false => handle_no_2fa(&user.email, jar).await
             .map(|(jar, status, json_response)|
                 Ok((jar, (status, json_response)))
             )?,
@@ -90,8 +87,9 @@ async fn handle_2fa<T, U, V, W>(
 where T: UserStore + Clone + Send + Sync + 'static,
       U: BannedTokenStore + Clone + Send + Sync + 'static,
       V: TwoFACodeStore + Clone + Send + Sync + 'static,
-      W: EmailClient + Clone + Send + Sync + 'static
+      W: EmailClient + Clone + Send + Sync + 'static,
 {
+
     let login_attempt_id = LoginAttemptId::default();
     let two_fa_code = TwoFACode::default();
 
@@ -103,13 +101,17 @@ where T: UserStore + Clone + Send + Sync + 'static,
         .send_email(email, "2 factor auth code", two_fa_code.to_string().as_str()).await
         .map_err(|_| AuthAPIError::UnexpectedError)?;
 
+    let auth_cookie = generate_auth_cookie(&email)
+        .map_err(|_| AuthAPIError::UnexpectedError)?;
+
+    let updated_jar = jar.add(auth_cookie);
     let response = TwoFactorAuthResponse {
         message: "2FA required".to_string(),
         login_attempt_id: login_attempt_id.as_ref().to_string(),
     };
 
     Ok((
-        jar,
+        updated_jar,
         StatusCode::PARTIAL_CONTENT,
         Json(LoginResponse::TwoFactorAuth(response))
     ))
