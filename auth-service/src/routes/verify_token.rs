@@ -13,10 +13,10 @@ pub async fn verify_token<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     Json(request): Json<VerifyTokenRequest>,
 ) -> Result<StatusCode, AuthAPIError>
-where T: UserStore + Clone + Send + Sync + 'static,
-      U: BannedTokenStore + Clone + Send + Sync + 'static,
-      V: TwoFACodeStore + Clone + Send + Sync + 'static,
-      W: EmailClient + Clone + Send + Sync + 'static
+where T: UserStore,
+      U: BannedTokenStore,
+      V: TwoFACodeStore,
+      W: EmailClient
 {
     let token = request.token;
 

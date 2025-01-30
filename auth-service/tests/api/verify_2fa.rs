@@ -29,7 +29,6 @@ async fn verify_2fa_returns_200() {
         .unwrap().0;
 
     assert_eq!(!token.is_empty(), true);
-
 }
 
 #[tokio::test]
@@ -65,7 +64,7 @@ async fn should_return_401_if_incorrect_credentials() {
 
 #[tokio::test]
 async fn should_return_401_if_old_code() {
-    // Call login twice. Then, attempt to call verify-fa with the 2FA code from the first login requet. This should fail.
+    // Call login twice. Then, attempt to call verify-fa with the 2FA code from the first login request. This should fail.
     let app = TestApp::new().await;
 
     let email = get_random_email();
@@ -97,5 +96,4 @@ async fn should_return_401_if_old_code() {
     })).await;
 
     assert_eq!(response.status().as_u16(), 206);
-
 }

@@ -9,10 +9,10 @@ use crate::utils::auth::validate_token;
 pub async fn logout<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     jar: CookieJar) -> Result<(CookieJar, impl IntoResponse), AuthAPIError>
-where T: UserStore + Clone + Send + Sync + 'static,
-      U: BannedTokenStore + Clone + Send + Sync + 'static,
-      V: TwoFACodeStore + Clone + Send + Sync + 'static,
-      W: EmailClient + Clone + Send + Sync + 'static
+where T: UserStore,
+      U: BannedTokenStore,
+      V: TwoFACodeStore,
+      W: EmailClient
 {
     let jar_binding = jar.to_owned();
     // get the jwt cookie from the cookie jar

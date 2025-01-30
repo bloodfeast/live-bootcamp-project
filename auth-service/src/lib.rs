@@ -39,10 +39,10 @@ impl Application
     /// **see also [app_state.rs](crate::app_state::AppState)**
     pub async fn build<T, U, V, W>(app_state: AppState<T, U, V, W>, address: &str) -> Result<Self, Box<dyn Error>>
     where
-        T: UserStore + Clone + Send + Sync + 'static,
-        U: BannedTokenStore + Clone + Send + Sync + 'static,
-        V: TwoFACodeStore + Clone + Send + Sync + 'static,
-        W: EmailClient + Clone + Send + Sync + 'static
+        T: UserStore,
+        U: BannedTokenStore,
+        V: TwoFACodeStore,
+        W: EmailClient
     {
 
         let allowed_origins = [

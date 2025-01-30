@@ -36,10 +36,10 @@ pub struct AppState<T: UserStore, U: BannedTokenStore, V: TwoFACodeStore, W: Ema
 }
 
 impl <T, U, V, W>AppState<T, U, V, W>
-where T: UserStore + Clone,
-      U: BannedTokenStore + Clone,
-      V: TwoFACodeStore + Clone,
-      W: EmailClient + Clone
+where T: UserStore,
+      U: BannedTokenStore,
+      V: TwoFACodeStore,
+      W: EmailClient,
 {
     pub fn new(user_store: Arc<RwLock<T>>, banned_token_store: Arc<RwLock<U>>, two_fa_code_store: Arc<RwLock<V>>, email_client: Arc<RwLock<W>>) -> Self {
         Self { user_store, banned_token_store, two_fa_code_store, email_client }

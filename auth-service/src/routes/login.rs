@@ -44,10 +44,10 @@ pub async fn login<T, U, V, W>(
     jar: CookieJar,
     Json(request): Json<LoginRequest>,
 ) -> Result<(CookieJar, impl IntoResponse), AuthAPIError>
-where T: UserStore + Clone + Send + Sync + 'static,
-      U: BannedTokenStore + Clone + Send + Sync + 'static,
-      V: TwoFACodeStore + Clone + Send + Sync + 'static,
-      W: EmailClient + Clone + Send + Sync + 'static
+where T: UserStore,
+      U: BannedTokenStore,
+      V: TwoFACodeStore,
+      W: EmailClient
 {
     let email = Email::from_str(request.email.as_str())
         .map_err(|_| AuthAPIError::InvalidCredentials)?;

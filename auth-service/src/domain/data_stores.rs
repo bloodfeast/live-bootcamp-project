@@ -21,7 +21,7 @@ pub struct LoginAttemptId(String);
 
 impl LoginAttemptId
 where
-    Self: Sized + Send + Sync,
+    Self: Sized + Send + Sync + Clone + 'static,
 {
     pub fn parse(id: String) -> Result<Self, String> {
         uuid::Uuid::parse_str(&id)
@@ -69,7 +69,7 @@ impl Display for TwoFACode {
 
 impl TwoFACode
 where
-    Self: Sized + Send + Sync
+    Self: Sized + Send + Sync + Clone + 'static,
 {
     pub fn parse(code: String) -> Result<Self, String> {
         if code.len() == 6 && code.chars().all(|c| c.is_digit(10)) {
@@ -93,7 +93,7 @@ impl FromStr for TwoFACode {
 #[async_trait::async_trait]
 pub trait UserStore
 where
-    Self: Sized + Send + Sync,
+    Self: Sized + Send + Sync + Clone + 'static,
 {
     async fn add_user(&mut self, user: User) -> Result<(), UserStoreError>;
     async fn get_user(&self, email: &Email) -> Result<&User, UserStoreError>;
@@ -103,7 +103,7 @@ where
 #[async_trait::async_trait]
 pub trait BannedTokenStore
 where
-    Self: Sized + Send + Sync,
+    Self: Sized + Send + Sync + Clone + 'static,
 {
     async fn add_banned_token(&mut self, token: String) -> Result<(), UserStoreError>;
     async fn is_banned(&self, token: &str) -> Result<bool, UserStoreError>;
@@ -112,7 +112,7 @@ where
 #[async_trait::async_trait]
 pub trait TwoFACodeStore
 where
-    Self: Sized + Send + Sync,
+    Self: Sized + Send + Sync + Clone + 'static,
 {
     async fn add_code(
         &mut self,
