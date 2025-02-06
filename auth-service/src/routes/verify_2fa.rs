@@ -1,14 +1,15 @@
 use std::str::FromStr;
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use axum::extract::State;
-use axum_extra::extract::CookieJar;
 use crate::app_state::AppState;
 use crate::domain::{AuthAPIError, BannedTokenStore, Email, EmailClient, LoginAttemptId, TwoFACode, TwoFACodeStore, UserStore};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Verify2FARequest {
     email: String,
+    #[serde(rename = "loginAttemptId")]
     login_attempt_id: String,
+    #[serde(rename = "2FACode")]
     two_fac_code: String,
 }
 

@@ -5,6 +5,8 @@ use axum::{
     Router,
 };
 use axum::http::Method;
+use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
@@ -26,6 +28,11 @@ pub struct Application {
     // address is exposed as a public field
     // so we have access to it in tests.
     address: String,
+}
+
+pub async fn get_postgres_pool(url: &str) -> Result<PgPool, sqlx::Error> {
+    // Create a new PostgreSQL connection pool
+    PgPoolOptions::new().max_connections(5).connect(url).await
 }
 
 impl Application
