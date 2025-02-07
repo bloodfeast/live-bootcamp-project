@@ -47,6 +47,12 @@ impl FromStr for Password {
     }
 }
 
+impl From<String> for Password {
+    fn from(s: String) -> Self {
+        Password::from_str(s.as_str()).unwrap()
+    }
+}
+
 fn validate_password(password: &str) -> bool {
     let length_check = validator::ValidateLength::validate_length(password, Some(8), Some(32), None);
     if !length_check {

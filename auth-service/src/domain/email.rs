@@ -47,7 +47,11 @@ impl FromStr for Email {
     }
 }
 
-
+impl From<String> for Email {
+    fn from(s: String) -> Self {
+        Email::from_str(s.as_str()).unwrap()
+    }
+}
 
 #[cfg(test)]
 mod tests {

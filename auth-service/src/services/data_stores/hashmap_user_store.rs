@@ -28,9 +28,9 @@ impl UserStore for HashmapUserStore {
         Ok(())
     }
 
-    async fn get_user(&self, email: &Email) -> Result<&User, UserStoreError> {
+    async fn get_user(&self, email: &Email) -> Result<User, UserStoreError> {
         match self.users.get(email) {
-            Some(user) => Ok(user),
+            Some(user) => Ok(user.clone()),
             None => Err(UserStoreError::UserNotFound),
         }
     }
@@ -96,7 +96,7 @@ mod tests {
             .expect("Failed to create test user");
         add_user_to_store(&mut store, user.clone()).await.unwrap();
 
-        assert_eq!(store.get_user(&user.email).await, Ok(&user));
+        assert_eq!(store.get_user(&user.email).await, Ok(user));
     }
 
     #[tokio::test]
