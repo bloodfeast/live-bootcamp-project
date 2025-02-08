@@ -56,6 +56,6 @@ where T: UserStore,
         Ok(_) => {
             Ok(AuthMessage::UserCreated.into_response())
         },
-        Err(_) => Err(AuthAPIError::UnexpectedError),
+        Err(_) => Err(AuthAPIError::UserAlreadyExists),
     }
 }

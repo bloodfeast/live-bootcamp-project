@@ -1,3 +1,4 @@
+use auth_service::utils::constants::JWT_COOKIE_NAME;
 use crate::helpers::{get_random_email, TestApp};
 
 #[tokio::test]
@@ -17,11 +18,12 @@ async fn refresh_token_returns_200() {
         "requires2FA": false
     })).await;
 
-    let token = login_response.headers().get("set-cookie")
-        .unwrap().to_str()
-        .unwrap().split_once('=')
-        .unwrap().1.split_once(';')
-        .unwrap().0;
+    assert_eq!(login_response.status().as_u16(), 200);
+
+    let cookie = login_response.cookies()
+        .find(|c| c.name() == JWT_COOKIE_NAME)
+        .expect("No token found");
+    let token = cookie.value();
 
     let response = app.post_refresh_token(&serde_json::json!({
         "email": email,
@@ -30,6 +32,7 @@ async fn refresh_token_returns_200() {
     })).await;
 
     assert_eq!(response.status().as_u16(), 200);
+
 }
 
 #[tokio::test]
@@ -49,11 +52,12 @@ async fn refresh_token_returns_401_on_invalid_token() {
         "requires2FA": false
     })).await;
 
-    let token = login_response.headers().get("set-cookie")
-        .unwrap().to_str()
-        .unwrap().split_once('=')
-        .unwrap().1.split_once(';')
-        .unwrap().0;
+    assert_eq!(login_response.status().as_u16(), 200);
+
+    let cookie = login_response.cookies()
+        .find(|c| c.name() == JWT_COOKIE_NAME)
+        .expect("No token found");
+    let token = cookie.value();
 
     app.post_logout(&serde_json::json!({
         "email": email,
@@ -81,15 +85,12 @@ async fn refresh_token_returns_401_on_invalid_email() {
 
     let login_response = app.post_login(&serde_json::json!({
         "email": email,
-        "password": "password",
-        "requires2FA": false
+        "password": "password"
     })).await;
-
-    let token = login_response.headers().get("set-cookie")
-        .unwrap().to_str()
-        .unwrap().split_once('=')
-        .unwrap().1.split_once(';')
-        .unwrap().0;
+    let cookie = login_response.cookies()
+        .find(|c| c.name() == JWT_COOKIE_NAME)
+        .expect("No token found");
+    let token = cookie.value();
 
     let response = app.post_refresh_token(&serde_json::json!({
         "email": get_random_email(),

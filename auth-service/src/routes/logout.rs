@@ -19,7 +19,7 @@ where T: UserStore,
     let cookie = match jar_binding.get("jwt") {
         Some(cookie) => {
             // validate the jwt token
-            match validate_token(cookie.value()).await {
+            match validate_token(cookie.value(), state.banned_token_store.clone().read().await).await {
                 Ok(_) => cookie,
                 // if the token is invalid, return an error
                 Err(_) => return Err(AuthAPIError::InvalidToken),

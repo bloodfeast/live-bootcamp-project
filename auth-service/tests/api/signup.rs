@@ -33,6 +33,7 @@ async fn should_return_201_if_valid_input() {
             .expect("Could not deserialize response body to UserBody"),
         expected_response
     );
+    
 }
 
 #[tokio::test]
@@ -44,14 +45,16 @@ async fn should_return_422_if_malformed_input() {
     let test_cases = [
         serde_json::json!({
             "password": "password123",
-            "requires2FA": true
+            "requires2FA": false
         }),
         serde_json::json!({
             "email": random_email,
-            "requires2FA": true
         }),
         serde_json::json!({
             "email": random_email,
+            "password": "password123"
+        }),
+        serde_json::json!({
             "password": "password123"
         }),
     ];
@@ -65,6 +68,7 @@ async fn should_return_422_if_malformed_input() {
             test_case
         );
     }
+    
 }
 
 #[tokio::test]
@@ -75,17 +79,17 @@ async fn should_return_401_if_invalid_input() {
         serde_json::json!({
             "email": "",
             "password": "password",
-            "requires2FA": true
+            "requires2FA": false
         }),
         serde_json::json!({
             "email": get_malformed_email(),
             "password": "password",
-            "requires2FA": true
+            "requires2FA": false
         }),
         serde_json::json!({
             "email": get_random_email(),
             "password": "pass",
-            "requires2FA": true
+            "requires2FA": false
         }),
     ];
 
@@ -103,6 +107,7 @@ async fn should_return_401_if_invalid_input() {
             "Invalid credentials".to_owned()
         );
     }
+    
 
 }
 
@@ -116,7 +121,7 @@ async fn should_return_409_if_email_already_exists() {
         .post_signup(&serde_json::json!({
             "email": random_email,
             "password": "password123",
-            "requires2FA": true
+            "requires2FA": false
         }))
         .await;
 
@@ -126,7 +131,7 @@ async fn should_return_409_if_email_already_exists() {
         .post_signup(&serde_json::json!({
             "email": random_email,
             "password": "password123",
-            "requires2FA": true
+            "requires2FA": false
         }))
         .await;
 
@@ -140,4 +145,5 @@ async fn should_return_409_if_email_already_exists() {
             .error,
         "User already exists".to_owned()
     );
+    
 }

@@ -21,6 +21,7 @@ async fn logout_returns_200() {
     let response = app.post_logout(r#"{"email": "[email protected]"}"#).await;
 
     assert_eq!(response.status().as_u16(), 200);
+    
 }
 
 #[tokio::test]
@@ -31,6 +32,7 @@ async fn should_return_400_if_jwt_cookie_missing() {
     let response = app.post_logout(r#"{"email": "[email protected]"}"#).await;
 
     assert_eq!(response.status().as_u16(), 400);
+    
 }
 
 #[tokio::test]
@@ -49,5 +51,6 @@ async fn should_return_401_if_invalid_token() {
     let response = app.post_logout(r#"{"email": "[email protected]"}"#).await;
 
     assert_eq!(response.status().as_u16(), 401);
+    
 
 }

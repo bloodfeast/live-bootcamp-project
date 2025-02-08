@@ -1,6 +1,7 @@
 use crate::helpers::{get_random_email, TestApp};
 use auth_service::domain::{LoginAttemptId, TwoFACode};
 use auth_service::http_response::ErrorResponse;
+use auth_service::utils::constants::JWT_COOKIE_NAME;
 
 #[tokio::test]
 async fn verify_2fa_returns_200() {
@@ -17,6 +18,7 @@ async fn verify_2fa_returns_200() {
     let response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
+        "requires2FA": true
     })).await;
 
     assert_eq!(response.status().as_u16(), 206);
@@ -29,6 +31,7 @@ async fn verify_2fa_returns_200() {
         .unwrap().0;
 
     assert_eq!(!token.is_empty(), true);
+    
 }
 
 #[tokio::test]
@@ -40,6 +43,7 @@ async fn should_return_422_if_malformed_input() {
         .await;
 
     assert_eq!(response.status().as_u16(), 422);
+    
 }
 
 #[tokio::test]
@@ -60,6 +64,7 @@ async fn should_return_401_if_incorrect_credentials() {
     })).await;
 
     assert_eq!(response.status().as_u16(), 401);
+    
 }
 
 #[tokio::test]
@@ -75,18 +80,18 @@ async fn should_return_401_if_old_code() {
     })).await;
     assert_eq!(response.status().as_u16(), 201);
 
-    let response = app.post_login(&serde_json::json!({
+    let login_response = app.post_login(&serde_json::json!({
         "email": email,
         "password": "password",
+        "requires2FA": true
     })).await;
 
-    assert_eq!(response.status().as_u16(), 206);
+    assert_eq!(login_response.status().as_u16(), 206);
 
-    let token = response.headers().get("set-cookie")
-        .unwrap().to_str()
-        .unwrap().split_once('=')
-        .unwrap().1.split_once(';')
-        .unwrap().0;
+    let cookie = login_response.cookies()
+        .find(|c| c.name() == JWT_COOKIE_NAME)
+        .expect("No token found");
+    let token = cookie.value();
 
     assert_eq!(!token.is_empty(), true);
 
@@ -96,6 +101,7 @@ async fn should_return_401_if_old_code() {
     })).await;
 
     assert_eq!(response.status().as_u16(), 206);
+    
 }
 #[tokio::test]
 async fn should_return_400_if_invalid_input() {
@@ -149,4 +155,5 @@ async fn should_return_400_if_invalid_input() {
             "Malformed request".to_owned()
         );
     }
+    
 }

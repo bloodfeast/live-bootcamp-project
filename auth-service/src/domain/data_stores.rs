@@ -94,6 +94,10 @@ impl AsRef<str> for TwoFACode {
     }
 }
 
+pub trait FromDbString {
+    fn from_db_string(s: &str) -> Self;
+}
+
 
 #[async_trait::async_trait]
 pub trait UserStore

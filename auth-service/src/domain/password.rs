@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use crate::domain::AuthAPIError;
+use crate::domain::{AuthAPIError, FromDbString};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Password {
@@ -47,19 +47,17 @@ impl FromStr for Password {
     }
 }
 
-impl From<String> for Password {
-    fn from(s: String) -> Self {
-        Password::from_str(s.as_str()).unwrap()
+impl FromDbString for Password {
+    fn from_db_string(s: &str) -> Self {
+        Password {
+            password: s.to_string(),
+        }
     }
 }
 
 fn validate_password(password: &str) -> bool {
     let length_check = validator::ValidateLength::validate_length(password, Some(8), Some(32), None);
     if !length_check {
-        return false;
-    }
-    let valid_chars = validator::ValidateNonControlCharacter::validate_non_control_character(&password);
-    if !valid_chars {
         return false;
     }
     true

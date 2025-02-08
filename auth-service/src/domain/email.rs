@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use crate::domain::AuthAPIError;
+use crate::domain::{AuthAPIError, FromDbString};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Email {
@@ -47,9 +47,11 @@ impl FromStr for Email {
     }
 }
 
-impl From<String> for Email {
-    fn from(s: String) -> Self {
-        Email::from_str(s.as_str()).unwrap()
+impl FromDbString for Email {
+    fn from_db_string(s: &str) -> Self {
+        Email {
+            email: s.to_string(),
+        }
     }
 }
 

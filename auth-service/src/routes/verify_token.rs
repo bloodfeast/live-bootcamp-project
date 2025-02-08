@@ -3,6 +3,7 @@ use axum::http::StatusCode;
 use axum::Json;
 use crate::app_state::AppState;
 use crate::domain::{AuthAPIError, BannedTokenStore, EmailClient, TwoFACodeStore, UserStore};
+use crate::utils;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct VerifyTokenRequest {
@@ -20,16 +21,9 @@ where T: UserStore,
 {
     let token = request.token;
 
-    let banned_token_store = state.banned_token_store.read().await;
-    match banned_token_store.is_banned(&token).await {
-        result => {
-            let is_banned = result
-                .map_err(|_| AuthAPIError::UnexpectedError)?;
-            if is_banned {
-                return Err(AuthAPIError::InvalidToken);
-            }
-            Ok(StatusCode::OK)
-        },
+    match utils::auth::validate_token(&token, state.banned_token_store.clone().read().await).await {
+        Ok(_) =>  Ok(StatusCode::OK),
+        Err(_) => Err(AuthAPIError::InvalidToken),
     }
 }
 
