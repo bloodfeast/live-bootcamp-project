@@ -2,9 +2,8 @@ use reqwest::Url;
 use auth_service::utils::constants::JWT_COOKIE_NAME;
 use crate::helpers::{get_random_email, TestApp};
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn logout_returns_200() {
-    let app = TestApp::new().await;
     let email = &get_random_email();
     let _ = app.post_signup(&serde_json::json!({
         "email": email,
@@ -24,20 +23,16 @@ async fn logout_returns_200() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_400_if_jwt_cookie_missing() {
-
-    let app = TestApp::new().await;
-
     let response = app.post_logout(r#"{"email": "[email protected]"}"#).await;
 
     assert_eq!(response.status().as_u16(), 400);
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_401_if_invalid_token() {
-    let app = TestApp::new().await;
 
     // add invalid cookie
     app.cookie_jar.add_cookie_str(

@@ -3,9 +3,8 @@ use auth_service::domain::{LoginAttemptId, TwoFACode};
 use auth_service::http_response::ErrorResponse;
 use auth_service::utils::constants::JWT_COOKIE_NAME;
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn verify_2fa_returns_200() {
-    let app = TestApp::new().await;
 
     let email = get_random_email();
     let response = app.post_signup(&serde_json::json!({
@@ -34,9 +33,8 @@ async fn verify_2fa_returns_200() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_422_if_malformed_input() {
-    let app = TestApp::new().await;
 
     let response = app
         .post_verify_2fa(r#"{"email": "example.com", "password": "password"}"#)
@@ -46,9 +44,8 @@ async fn should_return_422_if_malformed_input() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_401_if_incorrect_credentials() {
-    let app = TestApp::new().await;
 
     let email = get_random_email();
     let response = app.post_signup(&serde_json::json!({
@@ -67,10 +64,9 @@ async fn should_return_401_if_incorrect_credentials() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_401_if_old_code() {
     // Call login twice. Then, attempt to call verify-fa with the 2FA code from the first login request. This should fail.
-    let app = TestApp::new().await;
 
     let email = get_random_email();
     let response = app.post_signup(&serde_json::json!({
@@ -103,9 +99,8 @@ async fn should_return_401_if_old_code() {
     assert_eq!(response.status().as_u16(), 206);
     
 }
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_400_if_invalid_input() {
-    let app = TestApp::new().await;
 
     let random_email = get_random_email();
     let login_attempt_id = LoginAttemptId::default().as_ref().to_owned();

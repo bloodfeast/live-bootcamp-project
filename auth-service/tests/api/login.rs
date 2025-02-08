@@ -6,9 +6,8 @@ use crate::helpers::{
 };
 
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn login_returns_200() {
-    let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
         "email": email,
@@ -25,9 +24,8 @@ async fn login_returns_200() {
     assert_eq!(response.status().as_u16(), 200);
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_200_if_valid_credentials_and_2fa_disabled() {
-    let app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -60,10 +58,9 @@ async fn should_return_200_if_valid_credentials_and_2fa_disabled() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn login_returns_422_on_malformed_credentials() {
 
-    let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
         "email": email,
@@ -93,9 +90,8 @@ async fn login_returns_422_on_malformed_credentials() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn login_returns_401_on_invalid_credentials() {
-    let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
         "email": email,
@@ -127,9 +123,8 @@ async fn login_returns_401_on_invalid_credentials() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn login_returns_401_on_non_existent_user() {
-    let app = TestApp::new().await;
     let email = &get_random_email();
     let response = app.post_signup(&serde_json::json!({
         "email": email,
@@ -146,10 +141,9 @@ async fn login_returns_401_on_non_existent_user() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_206_if_valid_credentials_and_2fa_enabled() {
 
-    let app = TestApp::new().await;
 
     let random_email = get_random_email();
 

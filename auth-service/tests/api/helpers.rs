@@ -157,7 +157,7 @@ impl TestApp {
 impl Drop for TestApp {
     fn drop(&mut self) {
         if !self.clean_up_called {
-            eprintln!("TestApp::clean_up was not called before dropping TestApp");
+            panic!("TestApp::clean_up was not called before dropping TestApp");
         }
     }
 }

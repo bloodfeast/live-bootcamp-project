@@ -6,9 +6,8 @@ use crate::helpers::{get_random_email, TestApp};
 // - verify_token doesn't check if the user exists already, it only checks if the token is banned \
 // we would want to return a 401 or 422 if the token doesn't correspond to any user I would think
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_200_if_token_is_not_banned() {
-    let app = TestApp::new().await;
 
     let email = &get_random_email();
     let _ = app.post_signup(&serde_json::json!({
@@ -52,9 +51,8 @@ async fn should_return_200_if_token_is_not_banned() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_401_if_invalid_token() {
-    let app = TestApp::new().await;
 
     let test_cases = vec!["", "invalid_token"];
 
@@ -76,9 +74,8 @@ async fn should_return_401_if_invalid_token() {
     
 }
 
-#[tokio::test]
+#[test_helpers::api_test]
 async fn should_return_422_if_malformed_input() {
-    let app = TestApp::new().await;
 
     let response = app
         .post_verify_token(r#"{"email": "example.com", "password": "password", "token": " "}"#)
