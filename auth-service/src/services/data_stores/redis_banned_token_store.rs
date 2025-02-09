@@ -34,7 +34,7 @@ impl BannedTokenStore for RedisBannedTokenStore {
     async fn is_banned(&self, token: &str) -> Result<bool, UserStoreError> {
         let key = get_key(token);
 
-        let mut conn = self.conn.read().await;
+        let mut conn = self.conn.write().await;
         let result: bool = conn.get(key)
             .map_err(|_| UserStoreError::UnexpectedError)?;
 

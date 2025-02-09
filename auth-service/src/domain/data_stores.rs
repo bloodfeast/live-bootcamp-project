@@ -38,6 +38,12 @@ impl FromStr for LoginAttemptId {
     }
 }
 
+impl FromDbString for LoginAttemptId {
+    fn from_db_string(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
 impl Default for LoginAttemptId {
     fn default() -> Self {
         Self(uuid::Uuid::new_v4().to_string())
