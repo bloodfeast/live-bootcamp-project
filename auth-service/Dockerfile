@@ -2,7 +2,7 @@
 FROM rust:1.83-alpine AS chef
 USER root
 # Add cargo-chef to cache dependencies
-RUN apk add --no-cache musl-dev & cargo install cargo-chef --locked
+RUN apk add --no-cache musl-dev & cargo install cargo-chef
 WORKDIR /app
 
 FROM chef AS planner
@@ -25,5 +25,6 @@ FROM debian:buster-slim AS runtime
 WORKDIR /app
 COPY --from=builder /app/target/release/auth-service /usr/local/bin
 COPY --from=builder /app/assets /app/assets
+COPY --from=builder /app/migrations /app/migrations
 ENV REDIS_HOST_NAME=redis
 ENTRYPOINT ["/usr/local/bin/auth-service"]
