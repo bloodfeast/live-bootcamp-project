@@ -6,9 +6,9 @@ use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 use auth_service::app_state::AppState;
-use auth_service::{Application, get_postgres_pool};
-use auth_service::services::{HashmapTwoFACodeStore, HashSetBannedTokenStore, MockEmailClient, PostgresUserStore};
-use auth_service::utils::constants::DATABASE_URL;
+use auth_service::{Application, get_postgres_pool, get_redis_client};
+use auth_service::services::{HashmapTwoFACodeStore, HashSetBannedTokenStore, MockEmailClient, PostgresUserStore, RedisBannedTokenStore};
+use auth_service::utils::constants::{DATABASE_URL, REDIS_HOST_NAME};
 use auth_service::utils::constants::test;
 
 pub struct TestApp {
@@ -34,7 +34,7 @@ impl TestApp {
 
         let app_state = AppState::new(
             Arc::new(RwLock::new(PostgresUserStore::new(pg_pool))),
-            Arc::new(RwLock::new(HashSetBannedTokenStore::default())),
+            Arc::new(RwLock::new(RedisBannedTokenStore::new(Arc::new(RwLock::new(configure_redis()))))),
             Arc::new(RwLock::new(HashmapTwoFACodeStore::default())),
             Arc::new(RwLock::new(MockEmailClient::default())),
         );
@@ -237,4 +237,11 @@ async fn delete_database(db_name: &str) {
         .execute(format!(r#"DROP DATABASE "{}";"#, db_name).as_str())
         .await
         .expect("Failed to drop the database.");
+}
+
+fn configure_redis() -> redis::Connection {
+    get_redis_client(REDIS_HOST_NAME.to_owned())
+        .expect("Failed to get Redis client")
+        .get_connection()
+        .expect("Failed to get Redis connection")
 }
