@@ -20,6 +20,8 @@ pub struct AuthMessageResponse {
 
 impl IntoResponse for AuthMessage {
     fn into_response(self) -> Response {
+        log_error_chain(&self);
+
         let (status, body) = match self {
             AuthMessage::UserCreated => (StatusCode::CREATED, "User created successfully!"),
             AuthMessage::UserLoggedIn => (StatusCode::OK, "User logged in successfully!"),
@@ -41,7 +43,7 @@ pub struct ErrorResponse {
 
 impl IntoResponse for AuthAPIError {
     fn into_response(self) -> Response {
-        log_error_chain(&self); // New!
+        log_error_chain(&self);
 
         let (status, error_message) = match self {
             AuthAPIError::UserAlreadyExists => (StatusCode::CONFLICT, "User already exists"),

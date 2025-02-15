@@ -33,10 +33,10 @@ impl TwoFACodeStore for RedisTwoFACodeStore{
     {
         let key = get_key(&email);
         let two_fa_tuple = TwoFATuple(login_attempt_id.as_ref().to_string(), code.to_string());
-        let json = serde_json::to_string(&two_fa_tuple).map_err(|_| TwoFACodeStoreError::UnexpectedError)?;
+        let json = serde_json::to_string(&two_fa_tuple).map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?;
         let mut conn = self.conn.write().await;
         conn.set_ex(key, json, TEN_MINUTES_IN_SECONDS)
-            .map_err(|_| TwoFACodeStoreError::UnexpectedError)?;
+            .map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?;
 
         Ok(())
     }
@@ -45,7 +45,7 @@ impl TwoFACodeStore for RedisTwoFACodeStore{
         let key = get_key(email);
         let mut conn = self.conn.write().await;
         conn.del(key)
-            .map_err(|_| TwoFACodeStoreError::UnexpectedError)?;
+            .map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?;
 
         Ok(())
     }
@@ -60,12 +60,12 @@ impl TwoFACodeStore for RedisTwoFACodeStore{
             .map_err(|_| TwoFACodeStoreError::LoginAttemptIdNotFound)?;
 
         let TwoFATuple(login_attempt_id, code) = serde_json::from_str(&json)
-            .map_err(|_| TwoFACodeStoreError::UnexpectedError)?;
+            .map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?;
 
         Ok((
             LoginAttemptId::from_db_string(&login_attempt_id),
             TwoFACode::parse(code)
-                .map_err(|_| TwoFACodeStoreError::UnexpectedError)?
+                .map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?
         ))
     }
 }

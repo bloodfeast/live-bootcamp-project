@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
+use color_eyre::eyre::{Context, eyre, Result};
 use thiserror::Error;
 use super::{Email, Password, User};
 
@@ -30,10 +31,22 @@ impl PartialEq for UserStoreError {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Error)]
 pub enum TwoFACodeStoreError {
+    #[error("Login attempt ID not found")]
     LoginAttemptIdNotFound,
-    UnexpectedError,
+    #[error("Unexpected error")]
+    UnexpectedError(#[source] color_eyre::eyre::Report),
+}
+
+impl PartialEq for TwoFACodeStoreError {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::LoginAttemptIdNotFound, Self::LoginAttemptIdNotFound) => true,
+            (Self::UnexpectedError(_), Self::UnexpectedError(_)) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -44,9 +57,8 @@ where
     Self: Sized + Send + Sync + Clone + 'static,
 {
     pub fn parse(id: String) -> Result<Self, String> {
-        uuid::Uuid::parse_str(&id)
-            .map(|_| Self(id))
-            .map_err(|_| "Invalid LoginAttemptId".to_string())
+        let parsed_id = uuid::Uuid::parse_str(&id).wrap_err("Invalid login attempt id")?; // Updated!
+        Ok(Self(parsed_id.to_string()))
     }
 }
 
@@ -97,11 +109,11 @@ impl TwoFACode
 where
     Self: Sized + Send + Sync + Clone + 'static,
 {
-    pub fn parse(code: String) -> Result<Self, String> {
+    pub fn parse(code: String) -> Result<Self> {
         if code.len() == 6 && code.chars().all(|c| c.is_digit(10)) {
             Ok(Self(code))
         } else {
-            Err("Invalid TwoFACode".to_string())
+            Err(eyre!("Invalid 2FA code"))
         }
     }
 }
@@ -109,7 +121,7 @@ where
 impl FromStr for TwoFACode {
     type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Self::parse(s.to_string())
     }
 }
@@ -123,7 +135,6 @@ impl AsRef<str> for TwoFACode {
 pub trait FromDbString {
     fn from_db_string(s: &str) -> Self;
 }
-
 
 #[async_trait::async_trait]
 pub trait UserStore

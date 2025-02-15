@@ -39,6 +39,7 @@ pub struct TwoFactorAuthResponse {
     pub login_attempt_id: String,
 }
 
+#[tracing::instrument(name = "Login", skip_all)]
 pub async fn login<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     jar: CookieJar,
@@ -68,6 +69,7 @@ where T: UserStore,
     }
 }
 
+#[tracing::instrument(name = "Handle 2FA", skip_all)]
 async fn handle_2fa<T, U, V, W>(
     email: &Email,
     state: &AppState<T, U, V, W>,
@@ -106,6 +108,7 @@ where T: UserStore + Clone + Send + Sync + 'static,
     Ok((updated_jar, (StatusCode::PARTIAL_CONTENT, json_response)))
 }
 
+#[tracing::instrument(name = "Handle no 2FA", skip_all)]
 async fn handle_no_2fa(
     email: &Email,
     jar: CookieJar,

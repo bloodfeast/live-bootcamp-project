@@ -6,6 +6,7 @@ use crate::app_state::AppState;
 use crate::domain::{AuthAPIError, BannedTokenStore, EmailClient, TwoFACodeStore, UserStore};
 use crate::utils::auth::validate_token;
 
+#[tracing::instrument(name = "Logout", skip_all)]
 pub async fn logout<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     jar: CookieJar) -> Result<(CookieJar, impl IntoResponse), AuthAPIError>

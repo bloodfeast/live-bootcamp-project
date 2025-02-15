@@ -13,6 +13,7 @@ pub struct Verify2FARequest {
     two_fac_code: String,
 }
 
+#[tracing::instrument(name = "Verify 2FA", skip_all)]
 pub async fn verify_2fa<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     Json(request): Json<Verify2FARequest>

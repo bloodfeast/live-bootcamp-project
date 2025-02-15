@@ -14,6 +14,7 @@ pub struct RefreshTokenRequest {
     pub token: String,
 }
 
+#[tracing::instrument(name = "Refresh Token", skip_all)]
 pub async fn refresh_token<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     jar: CookieJar,

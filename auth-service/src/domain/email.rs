@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use color_eyre::eyre::{eyre, Result};
 use crate::domain::{AuthAPIError, FromDbString};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
@@ -36,10 +37,10 @@ impl FromStr for Email {
     /// let email = Email::from_str("some.email@domain.com");
     /// assert!(email.is_ok());
     /// ```
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let is_valid = !s.is_empty() && validator::ValidateEmail::validate_email(&s);
         if !is_valid {
-            return Err(AuthAPIError::InvalidCredentials);
+            return eyre!(AuthAPIError::InvalidCredentials);
         };
         Ok(Email {
             email: s.to_string(),

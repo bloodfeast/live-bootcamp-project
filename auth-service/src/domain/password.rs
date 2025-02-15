@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use color_eyre::eyre::{eyre, Result};
 use crate::domain::{AuthAPIError, FromDbString};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
@@ -34,11 +35,11 @@ impl FromStr for Password {
     /// let password = Password::from_str("password123");
     /// assert!(password.is_ok());
     /// ```
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let is_valid = validate_password(&s);
 
         if !is_valid {
-            return Err(AuthAPIError::InvalidCredentials);
+            return eyre!(AuthAPIError::InvalidCredentials);
         };
 
         Ok(Password {
