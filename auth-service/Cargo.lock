@@ -2173,6 +2173,7 @@ dependencies = [
 [[package]]
 name = "test_helpers"
 version = "0.1.0"
+source = "git+https://github.com/bloodfeast/rs_test_helpers.git#2b805118d59aee3f80520fd38e1b8967ff07f34e"
 dependencies = [
  "quote",
  "syn 2.0.96",
