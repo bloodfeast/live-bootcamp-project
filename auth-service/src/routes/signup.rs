@@ -31,7 +31,7 @@ pub struct SignupRequest {
 /// so we can call the `add_user` method on the `UserStore` instance.
 ///
 /// - see also [app_state.rs](crate::app_state::AppState)
-#[tracing::instrument(name = "Signup", skip_all, err(Debug))]
+#[tracing::instrument(name = "Signup", skip_all)]
 pub async fn signup<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     Json(request): Json<SignupRequest>,
@@ -57,6 +57,6 @@ where T: UserStore,
         Ok(_) => {
             Ok(AuthMessage::UserCreated.into_response())
         },
-        Err(_) => Err(AuthAPIError::UserAlreadyExists),
+        Err(e) => Err(AuthAPIError::UnexpectedError(e.into())),
     }
 }

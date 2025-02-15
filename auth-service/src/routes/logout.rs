@@ -33,7 +33,7 @@ where T: UserStore,
     let mut banned_token_store = state.banned_token_store.write().await;
     let token = cookie.value();
     banned_token_store.add_banned_token(token.to_string()).await
-        .map_err(|_| AuthAPIError::UnexpectedError)?;
+        .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
 
     // remove the jwt cookie from the cookie jar
     let jar = jar.remove(cookie.to_string());

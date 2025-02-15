@@ -86,18 +86,18 @@ where T: UserStore + Clone + Send + Sync + 'static,
     two_fa_code_store
         .add_code(email, login_attempt_id.clone(), two_fa_code.clone())
         .await
-        .map_err(|_| AuthAPIError::UnexpectedError)?;
+        .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
 
     state.email_client.write().await
         .send_email(email, "2 factor auth code", two_fa_code.to_string().as_str()).await
-        .map_err(|_| AuthAPIError::UnexpectedError)?;
+        .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
 
     let response = TwoFactorAuthResponse {
         message: "2FA required".to_string(),
         login_attempt_id: login_attempt_id.as_ref().to_string(),
     };
     let auth_cookie = generate_auth_cookie(&email)
-        .map_err(|_| AuthAPIError::UnexpectedError)?;
+        .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
 
     let updated_jar = jar.add(auth_cookie);
 
@@ -112,7 +112,7 @@ async fn handle_no_2fa(
 ) -> Result<(CookieJar, (StatusCode, Json<LoginResponse>)), AuthAPIError>
 {
     let auth_cookie = generate_auth_cookie(&email)
-        .map_err(|_| AuthAPIError::UnexpectedError)?;
+        .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
     let updated_jar = jar.add(auth_cookie);
 
     let status = StatusCode::OK;

@@ -1,15 +1,35 @@
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
+use thiserror::Error;
 use super::{Email, Password, User};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Error)]
 pub enum UserStoreError {
+    #[error("User already exists")]
     UserAlreadyExists,
+    #[error("User not found")]
     UserNotFound,
+    #[error("Invalid credentials")]
     InvalidCredentials,
-    UnexpectedError,
+    #[error("Unexpected error")]
+    UnexpectedError(#[source] color_eyre::eyre::Report),
+    #[error("Banned token")]
     TokenBanned,
 }
+
+impl PartialEq for UserStoreError {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::UserAlreadyExists, Self::UserAlreadyExists) => true,
+            (Self::UserNotFound, Self::UserNotFound) => true,
+            (Self::InvalidCredentials, Self::InvalidCredentials) => true,
+            (Self::UnexpectedError(_), Self::UnexpectedError(_)) => true,
+            (Self::TokenBanned, Self::TokenBanned) => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum TwoFACodeStoreError {
     LoginAttemptIdNotFound,

@@ -51,7 +51,7 @@ where T: UserStore,
 
 
     let auth_cookie = generate_auth_cookie(&email)
-        .map_err(|_| AuthAPIError::UnexpectedError)?;
+        .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
 
     let updated_jar = updated_jar.add(auth_cookie);
 

@@ -7,6 +7,7 @@ use argon2::{
 use sqlx::PgPool;
 
 use crate::domain::{Email, User, UserStore, UserStoreError, Password, FromDbString};
+use color_eyre::eyre::{eyre, Context, Result};
 
 #[derive(Debug, Clone)]
 pub struct PostgresUserStore {
@@ -26,7 +27,7 @@ impl UserStore for PostgresUserStore {
     async fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
         let password_hash = compute_password_hash(user.password.as_ref().to_owned())
             .await
-            .map_err(|_| UserStoreError::UnexpectedError)?;
+            .map_err(|e| UserStoreError::UnexpectedError(e.into()))?;
 
         println!("email: {:?}", user.email.as_ref());
         println!("password_hash: {:?}", password_hash);
@@ -44,7 +45,7 @@ impl UserStore for PostgresUserStore {
         )
             .execute(&self.pool)
             .await
-            .map_err(|_| UserStoreError::UnexpectedError)?;
+            .map_err(|e| UserStoreError::UnexpectedError(e.into()))?;
 
         Ok(())
     }
@@ -61,7 +62,7 @@ impl UserStore for PostgresUserStore {
         )
             .fetch_optional(&self.pool)
             .await
-            .map_err(|_| UserStoreError::UnexpectedError)?
+            .map_err(|e| UserStoreError::UnexpectedError(e.into()))?
             .map(|row| {
                 println!("email: {:?}", &row.email);
                 println!("password_hash: {:?}", &row.password_hash);
@@ -96,7 +97,7 @@ impl UserStore for PostgresUserStore {
 async fn verify_password_hash(
     expected_password_hash: String,
     password_candidate: String,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<()> {
     tracing::Span::current();
     tokio::task::spawn_blocking(move || {
         let expected_password_hash: PasswordHash<'_> = PasswordHash::new(&expected_password_hash)?;
@@ -108,7 +109,7 @@ async fn verify_password_hash(
 }
 
 #[tracing::instrument(name = "Computing password hash", skip_all)]
-async fn compute_password_hash(password: String) -> Result<String, Box<dyn Error + Send + Sync>> {
+async fn compute_password_hash(password: String) -> Result<String> {
     tracing::Span::current();
     tokio::task::spawn_blocking(move || {
         let salt: SaltString = SaltString::generate(&mut rand::thread_rng());

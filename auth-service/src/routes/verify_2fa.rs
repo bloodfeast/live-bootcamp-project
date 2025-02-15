@@ -40,7 +40,7 @@ where T: UserStore,
             if logon_attempt == login_attempt_id && tfa_code == two_fac_code {
                 // Remove the code from the store, so it can't be used again.
                 two_fac_code_store.remove_code(&email).await
-                    .map_err(|_| AuthAPIError::UnexpectedError)?;
+                    .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
 
                 Ok(StatusCode::OK)
             } else {
