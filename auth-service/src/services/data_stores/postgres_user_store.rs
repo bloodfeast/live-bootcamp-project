@@ -21,6 +21,8 @@ impl PostgresUserStore {
 
 #[async_trait::async_trait]
 impl UserStore for PostgresUserStore {
+
+    #[tracing::instrument(name = "Adding user to PostgreSQL", skip_all)]
     async fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
         let password_hash = compute_password_hash(user.password.as_ref().to_owned())
             .await
@@ -47,6 +49,7 @@ impl UserStore for PostgresUserStore {
         Ok(())
     }
 
+    #[tracing::instrument(name = "Retrieving user from PostgreSQL", skip_all)]
     async fn get_user(&self, email: &Email) -> Result<User, UserStoreError> {
         sqlx::query!(
             r#"
@@ -72,6 +75,7 @@ impl UserStore for PostgresUserStore {
             .ok_or(UserStoreError::UserNotFound)?
     }
 
+    #[tracing::instrument(name = "Validating user credentials in PostgreSQL", skip_all)]
     async fn validate_user(
         &self,
         email: &Email,
@@ -88,10 +92,12 @@ impl UserStore for PostgresUserStore {
     }
 }
 
+#[tracing::instrument(name = "Verify password hash", skip_all)]
 async fn verify_password_hash(
     expected_password_hash: String,
     password_candidate: String,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    tracing::Span::current();
     tokio::task::spawn_blocking(move || {
         let expected_password_hash: PasswordHash<'_> = PasswordHash::new(&expected_password_hash)?;
 
@@ -101,7 +107,9 @@ async fn verify_password_hash(
     }).await?
 }
 
+#[tracing::instrument(name = "Computing password hash", skip_all)]
 async fn compute_password_hash(password: String) -> Result<String, Box<dyn Error + Send + Sync>> {
+    tracing::Span::current();
     tokio::task::spawn_blocking(move || {
         let salt: SaltString = SaltString::generate(&mut rand::thread_rng());
         let password_hash = Argon2::new(

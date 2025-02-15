@@ -31,6 +31,7 @@ pub struct SignupRequest {
 /// so we can call the `add_user` method on the `UserStore` instance.
 ///
 /// - see also [app_state.rs](crate::app_state::AppState)
+#[tracing::instrument(name = "Signup", skip_all, err(Debug))]
 pub async fn signup<T, U, V, W>(
     State(state): State<AppState<T, U, V, W>>,
     Json(request): Json<SignupRequest>,

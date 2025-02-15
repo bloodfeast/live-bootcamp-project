@@ -3,13 +3,15 @@ use sqlx::PgPool;
 use tokio::sync::RwLock;
 
 use auth_service::app_state::AppState;
-use auth_service::services::{HashmapTwoFACodeStore, HashSetBannedTokenStore, MockEmailClient, PostgresUserStore, RedisBannedTokenStore};
+use auth_service::services::{HashmapTwoFACodeStore, MockEmailClient, PostgresUserStore, RedisBannedTokenStore};
 use auth_service::{Application, get_postgres_pool, get_redis_client};
 use auth_service::utils::constants::{DATABASE_URL, REDIS_HOST_NAME};
 use auth_service::utils::constants::prod;
+use auth_service::utils::init_tracing;
 
 #[tokio::main]
 async fn main() {
+    init_tracing();
 
     let pg_pool = configure_postgresql().await;
 

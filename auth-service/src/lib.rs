@@ -11,6 +11,7 @@ use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
+use tower_http::trace::TraceLayer;
 
 pub mod routes;
 pub mod domain;
@@ -21,6 +22,7 @@ pub mod utils;
 
 use app_state::AppState;
 use crate::domain::{BannedTokenStore, EmailClient, TwoFACodeStore, UserStore};
+use crate::utils::{make_span_with_request_id, on_request, on_response};
 
 // This struct encapsulates our application-related logic.
 #[derive(Debug)]
@@ -80,7 +82,13 @@ impl Application
             .route("/verify-token", post(routes::verify_token))
             .route("/refresh-token", post(routes::refresh_token))
             .with_state(app_state)
-            .layer(cors);
+            .layer(cors)
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(make_span_with_request_id)
+                    .on_request(on_request)
+                    .on_response(on_response),
+            );
 
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?.to_string();
@@ -95,7 +103,7 @@ impl Application
     }
 
     pub async fn run(self) -> Result<(), std::io::Error> {
-        println!("listening on {}", &self.address);
+        tracing::info!("listening on {}", &self.address);
         self.server.await
     }
 
