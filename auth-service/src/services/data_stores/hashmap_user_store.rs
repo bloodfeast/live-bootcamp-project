@@ -50,7 +50,6 @@ impl UserStore for HashmapUserStore {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use secrecy::Secret;
     use super::*;
     use crate::domain::{AuthAPIError, User, UserStoreError};

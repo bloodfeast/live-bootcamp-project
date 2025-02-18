@@ -55,7 +55,6 @@ mod tests {
 
     use fake::faker::internet::en::SafeEmail;
     use fake::Fake;
-    use quickcheck::Arbitrary;
     use secrecy::Secret;
 
     #[test]

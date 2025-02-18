@@ -17,12 +17,6 @@ struct TwoFATuple(pub String, pub String);
 const TEN_MINUTES_IN_SECONDS: u64 = 600;
 const TWO_FA_CODE_PREFIX: &str = "two_fa_code:";
 
-impl RedisTwoFACodeStore {
-    pub fn new(conn: Arc<RwLock<Connection>>) -> Self {
-        Self { conn }
-    }
-}
-
 #[async_trait::async_trait]
 impl TwoFACodeStore for RedisTwoFACodeStore{
 
@@ -36,7 +30,10 @@ impl TwoFACodeStore for RedisTwoFACodeStore{
     {
         let key = get_key(&email);
         let two_fa_tuple = TwoFATuple(login_attempt_id.as_ref().to_string(), code.to_string());
-        let json = serde_json::to_string(&two_fa_tuple).map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?;
+
+        let json = serde_json::to_string(&two_fa_tuple)
+            .map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?;
+
         let mut conn = self.conn.write().await;
         conn.set_ex(key, json, TEN_MINUTES_IN_SECONDS)
             .map_err(|e| TwoFACodeStoreError::UnexpectedError(e.into()))?;
