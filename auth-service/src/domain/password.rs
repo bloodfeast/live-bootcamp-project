@@ -1,62 +1,58 @@
+use std::hash::Hash;
 use std::str::FromStr;
 use color_eyre::eyre::{eyre, Result};
+use secrecy::{ExposeSecret, Secret};
 use crate::domain::{AuthAPIError, FromDbString};
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+#[derive(Debug, Clone)]
 pub struct Password {
-    password: String,
+    password: Secret<String>,
 }
 
-impl AsRef<str> for Password {
-    fn as_ref(&self) -> &str {
-        &self.password
+impl Eq for Password {}
+
+impl PartialEq for Password {
+    fn eq(&self, other: &Self) -> bool {
+        self.password.expose_secret() == other.password.expose_secret()
     }
 }
 
-impl FromStr for Password {
-    type Err = AuthAPIError;
+impl Hash for Password {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.password.expose_secret().hash(state);
+    }
+}
 
-    /// Implemented `FromStr` trait for `Password`. \
-    /// in the same fashion as [Email](crate::domain::Email::from_str)
-    ///
-    /// ##### Arguments
-    /// * `s` - A string slice that holds the password
-    ///
-    /// ##### Returns
-    /// A `Result` containing a `Password` instance if the string is a valid password,
-    /// otherwise an `InvalidCredentials` error.
-    ///
-    /// ##### Examples
-    /// ```
-    /// use std::str::FromStr;
-    /// use auth_service::domain::Password;
-    /// use auth_service::domain::AuthAPIError;
-    ///
-    /// let password = Password::from_str("password123");
-    /// assert!(password.is_ok());
-    /// ```
-    fn from_str(s: &str) -> Result<Self> {
+impl Password {
+    pub fn parse(s: Secret<String>) -> Result<Self> {
         let is_valid = validate_password(&s);
 
         if !is_valid {
-            return eyre!(AuthAPIError::InvalidCredentials);
+            return Err(eyre!(AuthAPIError::InvalidCredentials));
         };
 
         Ok(Password {
-            password: s.to_string(),
+            password: s,
         })
+    }
+}
+
+impl AsRef<Secret<String>> for Password {
+    fn as_ref(&self) -> &Secret<String>{
+        &self.password
     }
 }
 
 impl FromDbString for Password {
     fn from_db_string(s: &str) -> Self {
         Password {
-            password: s.to_string(),
+            password: Secret::new(s.to_string()),
         }
     }
 }
 
-fn validate_password(password: &str) -> bool {
+fn validate_password(password: &Secret<String>) -> bool {
+    let password = password.expose_secret();
     let length_check = validator::ValidateLength::validate_length(password, Some(8), Some(32), None);
     if !length_check {
         return false;
@@ -66,21 +62,21 @@ fn validate_password(password: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use super::Password;
 
     use fake::faker::internet::en::Password as FakePassword;
     use fake::Fake;
+    use secrecy::Secret;
 
     #[test]
     fn empty_string_is_rejected() {
-        let password = "";
-        assert!(Password::from_str(password).is_err());
+        let password = Secret::new("".to_string());
+        assert!(Password::parse(password).is_err());
     }
     #[test]
     fn string_less_than_8_characters_is_rejected() {
-        let password = "1234567";
-        assert!(Password::from_str(password).is_err());
+        let password = Secret::new("1234567".to_string());
+        assert!(Password::parse(password).is_err());
     }
 
     #[derive(Debug, Clone)]
@@ -94,6 +90,6 @@ mod tests {
     }
     #[quickcheck_macros::quickcheck]
     fn valid_passwords_are_parsed_successfully(valid_password: ValidPasswordFixture) -> bool {
-        Password::from_str(valid_password.0.as_str()).is_ok()
+        Password::parse(Secret::new(valid_password.0)).is_ok()
     }
 }

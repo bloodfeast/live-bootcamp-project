@@ -1,5 +1,7 @@
 use crate::domain::{BannedTokenStore, UserStoreError};
 use std::collections::HashSet;
+use color_eyre::eyre::eyre;
+use crate::services::BannedTokenStoreError;
 
 #[derive(Debug, Default, Clone)]
 pub struct HashSetBannedTokenStore {
@@ -8,15 +10,15 @@ pub struct HashSetBannedTokenStore {
 
 #[async_trait::async_trait]
 impl BannedTokenStore for HashSetBannedTokenStore {
-    async fn add_banned_token(&mut self, token: String) -> Result<(), UserStoreError> {
+    async fn add_banned_token(&mut self, token: String) -> Result<(), BannedTokenStoreError> {
         if self.banned_tokens.contains(&token) {
-            return Err(UserStoreError::TokenBanned);
+            return Err(BannedTokenStoreError::UnexpectedError(eyre!("Token already banned")));
         }
         self.banned_tokens.insert(token);
         Ok(())
     }
 
-    async fn is_banned(&self, token: &str) -> Result<bool, UserStoreError> {
+    async fn is_banned(&self, token: &str) -> Result<bool, BannedTokenStoreError> {
         Ok(self.banned_tokens.contains(token))
     }
 }

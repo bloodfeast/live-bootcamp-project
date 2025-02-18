@@ -2,6 +2,7 @@ use std::fmt::{Debug, Display};
 use std::str::FromStr;
 use color_eyre::eyre::{Context, eyre, Result};
 use thiserror::Error;
+use crate::services::BannedTokenStoreError;
 use super::{Email, Password, User};
 
 #[derive(Debug, Error)]
@@ -56,17 +57,9 @@ impl LoginAttemptId
 where
     Self: Sized + Send + Sync + Clone + 'static,
 {
-    pub fn parse(id: String) -> Result<Self, String> {
+    pub fn parse(id: String) -> Result<Self> {
         let parsed_id = uuid::Uuid::parse_str(&id).wrap_err("Invalid login attempt id")?; // Updated!
         Ok(Self(parsed_id.to_string()))
-    }
-}
-
-impl FromStr for LoginAttemptId {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::parse(s.to_string())
     }
 }
 
@@ -118,14 +111,6 @@ where
     }
 }
 
-impl FromStr for TwoFACode {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self> {
-        Self::parse(s.to_string())
-    }
-}
-
 impl AsRef<str> for TwoFACode {
     fn as_ref(&self) -> &str {
         self.0.as_str()
@@ -151,8 +136,8 @@ pub trait BannedTokenStore
 where
     Self: Sized + Send + Sync + Clone + 'static,
 {
-    async fn add_banned_token(&mut self, token: String) -> Result<(), UserStoreError>;
-    async fn is_banned(&self, token: &str) -> Result<bool, UserStoreError>;
+    async fn add_banned_token(&mut self, token: String) -> Result<(), BannedTokenStoreError>;
+    async fn is_banned(&self, token: &str) -> Result<bool, BannedTokenStoreError>;
 }
 
 #[async_trait::async_trait]

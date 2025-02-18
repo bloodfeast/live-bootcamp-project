@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use crate::domain::{Email, Password, User, UserStore, UserStoreError};
 
 
@@ -8,7 +7,7 @@ pub fn user_store_error_to_string(error: &UserStoreError) -> String {
         UserStoreError::UserAlreadyExists => "User already exists".to_string(),
         UserStoreError::UserNotFound => "User not found".to_string(),
         UserStoreError::InvalidCredentials => "Invalid credentials".to_string(),
-        UserStoreError::UnexpectedError => "Unexpected error".to_string(),
+        UserStoreError::UnexpectedError(e) => format!("Unexpected error: {}", e),
         UserStoreError::TokenBanned => "Token banned".to_string(),
     }
 }
@@ -52,6 +51,7 @@ impl UserStore for HashmapUserStore {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
+    use secrecy::Secret;
     use super::*;
     use crate::domain::{AuthAPIError, User, UserStoreError};
 
@@ -60,9 +60,9 @@ mod tests {
     }
 
     fn create_test_user() -> Result<User, AuthAPIError> {
-        let email = Email::from_str("some.email@somedomain.com")
+        let email = Email::parse(Secret::new("someemail@somedomain.com".to_string()))
             .unwrap();
-        let password = Password::from_str("password123")
+        let password = Password::parse(Secret::new("password123".to_string()))
             .unwrap();
         User::new(email, password, false)
     }

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use redis::{Commands, Connection};
+use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 use crate::domain::{Email, FromDbString, LoginAttemptId, TwoFACode, TwoFACodeStore, TwoFACodeStoreError};
@@ -24,6 +25,8 @@ impl RedisTwoFACodeStore {
 
 #[async_trait::async_trait]
 impl TwoFACodeStore for RedisTwoFACodeStore{
+
+    #[tracing::instrument(name = "Adding 2FA code to Redis", skip_all)]
     async fn add_code(
         &mut self,
         email: &Email,
@@ -41,6 +44,7 @@ impl TwoFACodeStore for RedisTwoFACodeStore{
         Ok(())
     }
 
+    #[tracing::instrument(name = "Removing 2FA code from Redis", skip_all)]
     async fn remove_code(&mut self, email: &Email) -> Result<(), TwoFACodeStoreError> {
         let key = get_key(email);
         let mut conn = self.conn.write().await;
@@ -50,6 +54,7 @@ impl TwoFACodeStore for RedisTwoFACodeStore{
         Ok(())
     }
 
+    #[tracing::instrument(name = "Getting 2FA code from Redis", skip_all)]
     async fn get_code(
         &self,
         email: &Email,
@@ -71,5 +76,5 @@ impl TwoFACodeStore for RedisTwoFACodeStore{
 }
 
 fn get_key(email: &Email) -> String {
-    format!("{}{}", TWO_FA_CODE_PREFIX, email.as_ref())
+    format!("{}{}", TWO_FA_CODE_PREFIX, email.as_ref().expose_secret())
 }

@@ -4,6 +4,7 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum::response::IntoResponse;
 use axum_extra::extract::CookieJar;
+use secrecy::Secret;
 use serde::{Deserialize, Serialize};
 use crate::app_state::AppState;
 use crate::domain::{
@@ -21,8 +22,8 @@ use crate::utils::auth::generate_auth_cookie;
 
 #[derive(serde::Deserialize)]
 pub struct LoginRequest {
-    pub email: String,
-    pub password: String,
+    pub email: Secret<String>,
+    pub password: Secret<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -50,11 +51,13 @@ where T: UserStore,
       V: TwoFACodeStore,
       W: EmailClient
 {
-    let email = Email::from_str(request.email.as_str())
+    let email = Email::parse(request.email)
         .map_err(|_| AuthAPIError::InvalidCredentials)?;
 
     let user_store = state.user_store.write().await;
-    user_store.validate_user(&email, &Password::from_str(&request.password)?).await
+    user_store.validate_user(&email, &Password::parse(request.password)
+        .map_err(|_| AuthAPIError::InvalidCredentials)?)
+        .await
         .map_err(|_| {
             eprintln!("User validation failed");
             AuthAPIError::InvalidCredentials
@@ -92,7 +95,7 @@ where T: UserStore + Clone + Send + Sync + 'static,
 
     state.email_client.write().await
         .send_email(email, "2 factor auth code", two_fa_code.to_string().as_str()).await
-        .map_err(|e| AuthAPIError::UnexpectedError(e.into()))?;
+        .map_err(|_| AuthAPIError::MalformedRequest)?;
 
     let response = TwoFactorAuthResponse {
         message: "2FA required".to_string(),

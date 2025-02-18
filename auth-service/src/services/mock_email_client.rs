@@ -1,3 +1,4 @@
+use secrecy::ExposeSecret;
 use crate::domain::{Email, EmailClient};
 
 #[derive(Clone, Debug, Default)]
@@ -14,7 +15,7 @@ impl EmailClient for MockEmailClient {
         // Our mock email client will simply log the recipient, subject, and content to standard output
         println!(
             "Sending email to {} with subject: {} and content: {}",
-            recipient.as_ref(),
+            recipient.as_ref().expose_secret().to_string(),
             subject,
             content
         );

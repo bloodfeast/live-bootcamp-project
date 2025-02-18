@@ -3,6 +3,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use axum_extra::extract::CookieJar;
+use secrecy::Secret;
 use crate::app_state::AppState;
 use crate::domain::{AuthAPIError, BannedTokenStore, Email, EmailClient, TwoFACodeStore, UserStore};
 use crate::utils::auth::{generate_auth_cookie, validate_token};
@@ -10,7 +11,7 @@ use crate::utils::constants::JWT_COOKIE_NAME;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct RefreshTokenRequest {
-    pub email: String,
+    pub email: Secret<String>,
     pub token: String,
 }
 
@@ -28,7 +29,7 @@ where T: UserStore,
 
     let token = request.token;
 
-    let email = Email::from_str(request.email.as_str())
+    let email = Email::parse(request.email)
         .map_err(|_| AuthAPIError::InvalidCredentials)?;
 
     state.user_store.read().await

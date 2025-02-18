@@ -1,12 +1,13 @@
 use std::str::FromStr;
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use axum::extract::State;
+use secrecy::Secret;
 use crate::app_state::AppState;
 use crate::domain::{AuthAPIError, BannedTokenStore, Email, EmailClient, LoginAttemptId, TwoFACode, TwoFACodeStore, UserStore};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Verify2FARequest {
-    email: String,
+    email: Secret<String>,
     #[serde(rename = "loginAttemptId")]
     login_attempt_id: String,
     #[serde(rename = "2FACode")]
@@ -23,13 +24,13 @@ where T: UserStore,
       V: TwoFACodeStore,
       W: EmailClient
 {
-    let email = Email::from_str(request.email.as_str())
+    let email = Email::parse(request.email)
         .map_err(|_| AuthAPIError::MalformedRequest)?;
 
-    let login_attempt_id = LoginAttemptId::from_str(request.login_attempt_id.as_str())
+    let login_attempt_id = LoginAttemptId::parse(request.login_attempt_id)
         .map_err(|_| AuthAPIError::MalformedRequest)?;
 
-    let two_fac_code = TwoFACode::from_str(request.two_fac_code.as_str())
+    let two_fac_code = TwoFACode::parse(request.two_fac_code)
         .map_err(|_| AuthAPIError::MalformedRequest)?;
 
     let mut two_fac_code_store = state.two_fa_code_store.write().await;

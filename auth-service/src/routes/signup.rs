@@ -4,6 +4,7 @@ use axum::{
     response::IntoResponse,
     extract::State,
 };
+use secrecy::Secret;
 use serde::{Deserialize};
 use crate::{
     app_state::AppState,
@@ -19,8 +20,8 @@ use crate::domain::{BannedTokenStore, Email, EmailClient, Password, TwoFACodeSto
 
 #[derive(Deserialize, Debug)]
 pub struct SignupRequest {
-    pub email: String,
-    pub password: String,
+    pub email: Secret<String>,
+    pub password: Secret<String>,
     #[serde(rename = "requires2FA")]
     pub requires_2fa: bool,
 }
@@ -41,8 +42,10 @@ where T: UserStore,
       V: TwoFACodeStore,
       W: EmailClient
 {
-    let email = Email::from_str(request.email.as_str())?;
-    let password = Password::from_str(&request.password)?;
+    let email = Email::parse(request.email)
+        .map_err(|_| AuthAPIError::MalformedRequest)?;
+    let password = Password::parse(request.password)
+        .map_err(|_| AuthAPIError::MalformedRequest)?;
 
     // Create a new `User` instance using data in the `request`
     let user = User::new(email, password, request.requires_2fa)?;

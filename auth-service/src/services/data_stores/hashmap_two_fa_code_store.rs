@@ -34,14 +34,14 @@ impl TwoFACodeStore for HashmapTwoFACodeStore {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
+    use secrecy::Secret;
     use super::*;
     use crate::domain::{Email, LoginAttemptId, TwoFACode};
 
     #[tokio::test]
     async fn test_add_code() {
         let mut store = HashmapTwoFACodeStore::default();
-        let email = Email::from_str("someemail@somedomain.com")
+        let email = Email::parse(Secret::new("someemail@somedomain.com".to_string()))
             .expect("Failed to create Email");
         let login_attempt_id = LoginAttemptId::default();
         let code = TwoFACode::default();
@@ -57,7 +57,7 @@ mod tests {
     #[tokio::test]
     async fn test_remove_code() {
         let mut store = HashmapTwoFACodeStore::default();
-        let email = Email::from_str("someemail@somedomain.com")
+        let email = Email::parse(Secret::new("someemail@somedomain.com".to_string()))
             .expect("Failed to create Email");
         let login_attempt_id = LoginAttemptId::default();
         let code = TwoFACode::default();

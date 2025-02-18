@@ -20,8 +20,6 @@ pub struct AuthMessageResponse {
 
 impl IntoResponse for AuthMessage {
     fn into_response(self) -> Response {
-        log_error_chain(&self);
-
         let (status, body) = match self {
             AuthMessage::UserCreated => (StatusCode::CREATED, "User created successfully!"),
             AuthMessage::UserLoggedIn => (StatusCode::OK, "User logged in successfully!"),

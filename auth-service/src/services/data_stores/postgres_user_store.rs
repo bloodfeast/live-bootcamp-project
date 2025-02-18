@@ -8,6 +8,7 @@ use sqlx::PgPool;
 
 use crate::domain::{Email, User, UserStore, UserStoreError, Password, FromDbString};
 use color_eyre::eyre::{eyre, Context, Result};
+use secrecy::{ExposeSecret, Secret};
 
 #[derive(Debug, Clone)]
 pub struct PostgresUserStore {
@@ -39,8 +40,8 @@ impl UserStore for PostgresUserStore {
             INSERT INTO users (email, password_hash, requires_2fa)
             VALUES ($1, $2, $3)
             "#,
-            user.email.as_ref().to_string(),
-            &password_hash,
+            user.email.as_ref().expose_secret().to_string(),
+            &password_hash.expose_secret().to_string(),
             user.requires_2fa
         )
             .execute(&self.pool)
@@ -58,7 +59,7 @@ impl UserStore for PostgresUserStore {
             FROM users
             WHERE email = $1
             "#,
-            email.as_ref().to_string()
+            email.as_ref().expose_secret().to_string()
         )
             .fetch_optional(&self.pool)
             .await
@@ -95,32 +96,47 @@ impl UserStore for PostgresUserStore {
 
 #[tracing::instrument(name = "Verify password hash", skip_all)]
 async fn verify_password_hash(
-    expected_password_hash: String,
-    password_candidate: String,
+    expected_password_hash: Secret<String>, // Updated!
+    password_candidate: Secret<String>, // Updated!
 ) -> Result<()> {
-    tracing::Span::current();
-    tokio::task::spawn_blocking(move || {
-        let expected_password_hash: PasswordHash<'_> = PasswordHash::new(&expected_password_hash)?;
+    let current_span: tracing::Span = tracing::Span::current();
+    let result = tokio::task::spawn_blocking(move || {
+        current_span.in_scope(|| {
+            let expected_password_hash: PasswordHash<'_> =
+                PasswordHash::new(expected_password_hash.expose_secret())?;
 
-        Argon2::default()
-            .verify_password(password_candidate.as_bytes(), &expected_password_hash)
-            .map_err(|e| e.into())
-    }).await?
+            Argon2::default()
+                .verify_password(
+                    password_candidate.expose_secret().as_bytes(), // Updated!
+                    &expected_password_hash,
+                )
+                .wrap_err("failed to verify password hash")
+        })
+    })
+        .await;
+
+    result?
 }
 
 #[tracing::instrument(name = "Computing password hash", skip_all)]
-async fn compute_password_hash(password: String) -> Result<String> {
-    tracing::Span::current();
-    tokio::task::spawn_blocking(move || {
-        let salt: SaltString = SaltString::generate(&mut rand::thread_rng());
-        let password_hash = Argon2::new(
-            Algorithm::Argon2id,
-            Version::V0x13,
-            Params::new(15000, 2, 1, None)?,
-        )
-            .hash_password(password.as_bytes(), &salt)?
-            .to_string();
+async fn compute_password_hash(password: Secret<String>) -> Result<Secret<String>> { // Updated!
+    let current_span: tracing::Span = tracing::Span::current();
 
-        Ok(password_hash)
-    }).await?
+    let result = tokio::task::spawn_blocking(move || {
+        current_span.in_scope(|| {
+            let salt: SaltString = SaltString::generate(&mut rand::thread_rng());
+            let password_hash = Argon2::new(
+                Algorithm::Argon2id,
+                Version::V0x13,
+                Params::new(15000, 2, 1, None)?,
+            )
+                .hash_password(password.expose_secret().as_bytes(), &salt)? // Updated!
+                .to_string();
+
+            Ok(Secret::new(password_hash)) // Updated!
+        })
+    })
+        .await;
+
+    result?
 }
